@@ -48,9 +48,9 @@ function movePapersToSubjectGroups() {
 
 function movePapersToChronologicalGroups() {
   paperElementsInTimeOrder().forEach((paper) => {
-    const completionYear = paper.dataset.completionYear;
+    const researchYear = paper.dataset.researchYear;
     const target = document.querySelector(
-      `.paper-year-group[data-completion-year="${completionYear}"] .chronological-paper-list`,
+      `.paper-year-group[data-research-year="${researchYear}"] .chronological-paper-list`,
     );
     if (target) target.append(paper);
   });

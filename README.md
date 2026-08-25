@@ -79,17 +79,18 @@ authors = "Haoming Wang and Coauthor"
 journal = "Journal Name"
 venue = "Manuscript"
 year = 2026
-completion_year = 2025
+research_year = 2025
 volume = "12"
 number = "3"
 pages = "100-120"
 url = "https://example.com/paper.pdf"
 ```
 
-`year` is the publication or bibliographic year. `completion_year` is the year
-the research manuscript was completed and controls the year dividers in the
-paper list. Papers with the same `completion_year` should stay together in
-newest-to-oldest order in `data/papers.toml`.
+`year` is the publication or bibliographic year. `research_year` is the year in
+which the core research work for the project was primarily carried out, and it
+controls the year dividers in the paper list. Papers with the same
+`research_year` should stay together in newest-to-oldest order in
+`data/papers.toml`.
 
 `subject` must match exactly one `research_direction.id`. Subject view moves the
 same paper entries under those direction headings while preserving their

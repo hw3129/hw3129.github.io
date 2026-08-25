@@ -7,7 +7,7 @@ title = "Local Lipschitz Stability of Nonnegative Tensor Decompositions via Posi
 authors = "Haoming Wang and Ming Yuan"
 venue = "Preprint"
 year = 2026
-completion_year = 2026
+research_year = 2026
 
 
 [[paper]]
@@ -17,7 +17,7 @@ title = "Exact Minimality, Uniqueness, and Search for Nonnegative Tensor Decompo
 authors = "Haoming Wang and Ming Yuan"
 venue = "Preprint"
 year = 2026
-completion_year = 2026
+research_year = 2026
 
 
 [[paper]]
@@ -27,7 +27,7 @@ title = "Identifiability of Nonnegative Tensor Decompositions via Positive Scatt
 authors = "Haoming Wang and Ming Yuan"
 venue = "Preprint"
 year = 2026
-completion_year = 2026
+research_year = 2026
 
 
 [[paper]]
@@ -37,7 +37,7 @@ title = "Iterative Entropy Compression for Offset Empirical Processes"
 authors = "Haoming Wang and Daniel Hsu"
 venue = "Preprint"
 year = 2027
-completion_year = 2026
+research_year = 2026
 volume = ""
 number = ""
 pages = ""
@@ -50,7 +50,7 @@ title = "Rademacher Complexity of Gated Product Function Classes"
 authors = "Haoming Wang and Daniel Hsu"
 venue = "Preprint"
 year = 2026
-completion_year = 2025
+research_year = 2025
 volume = ""
 number = ""
 pages = ""
@@ -63,7 +63,7 @@ title = "Task Overlap and Finite-Depth Accessibility in Transformer In-Context L
 authors = "Haoming Wang and Daniel Hsu"
 venue = "Preprint"
 year = 2027
-completion_year = 2025
+research_year = 2025
 volume = ""
 number = ""
 pages = ""
@@ -77,7 +77,7 @@ title = "Singular Value Decomposition of Unbounded Operators"
 authors = "Haoming Wang and Rongbiao Wang and Lek-Heng Lim"
 venue = "Preprint"
 year = 2026
-completion_year = 2024
+research_year = 2024
 volume = ""
 number = ""
 pages = ""
@@ -90,7 +90,7 @@ title = "Glivenko-Cantelli for f-divergence"
 authors = "Haoming Wang and Lek-Heng Lim"
 venue = "IEEE Transactions on Information Theory (TIT)"
 year = 2026
-completion_year = 2024
+research_year = 2024
 volume = "68"
 number = "6"
 pages = "4020–4031"

@@ -19,7 +19,7 @@
 {{ $paperIDs := newScratch }}
 {{ $paperRefs := newScratch }}
 {{ $paperOrder := newScratch }}
-{{ $paperOrder.Set "previousCompletionYear" 999999 }}
+{{ $paperOrder.Set "previousResearchYear" 999999 }}
 {{ range $paperIndex, $paper := $orderedPapers }}
   {{ $paperID := $paper.id | default ($paper.title | urlize) }}
   {{ if eq (len (findRE `^[a-z0-9]+(-[a-z0-9]+)*$` $paperID)) 0 }}
@@ -37,15 +37,15 @@
   {{ else if not ($subjectIDs.Get $paperSubject) }}
     {{ errorf "Paper %q uses unknown subject %q" $paperID $paperSubject }}
   {{ end }}
-  {{ if not (isset $paper "completion_year") }}
-    {{ errorf "Paper %q must define completion_year in data/papers.toml" $paperID }}
+  {{ if not (isset $paper "research_year") }}
+    {{ errorf "Paper %q must define research_year in data/papers.toml" $paperID }}
   {{ else }}
-    {{ $completionYear := int $paper.completion_year }}
-    {{ $previousCompletionYear := $paperOrder.Get "previousCompletionYear" }}
-    {{ if gt $completionYear $previousCompletionYear }}
-      {{ errorf "Papers must be ordered by completion_year descending: %q (%d) follows %d" $paperID $completionYear $previousCompletionYear }}
+    {{ $researchYear := int $paper.research_year }}
+    {{ $previousResearchYear := $paperOrder.Get "previousResearchYear" }}
+    {{ if gt $researchYear $previousResearchYear }}
+      {{ errorf "Papers must be ordered by research_year descending: %q (%d) follows %d" $paperID $researchYear $previousResearchYear }}
     {{ end }}
-    {{ $paperOrder.Set "previousCompletionYear" $completionYear }}
+    {{ $paperOrder.Set "previousResearchYear" $researchYear }}
   {{ end }}
 {{ end }}
 {{ $contentHTML := printf "%s" .Content }}
@@ -130,23 +130,23 @@
         </div>
       {{ end }}
 
-      {{ $completionYears := slice }}
+      {{ $researchYears := slice }}
       {{ range $paper := $orderedPapers }}
-        {{ $completionYear := int $paper.completion_year }}
-        {{ if not (in $completionYears $completionYear) }}
-          {{ $completionYears = $completionYears | append $completionYear }}
+        {{ $researchYear := int $paper.research_year }}
+        {{ if not (in $researchYears $researchYear) }}
+          {{ $researchYears = $researchYears | append $researchYear }}
         {{ end }}
       {{ end }}
       <div id="papers-chronological" class="paper-view paper-list" data-paper-view="chronological">
-        {{ range $completionYear := $completionYears }}
-          <section class="paper-year-group" data-completion-year="{{ $completionYear }}" aria-labelledby="papers-completed-{{ $completionYear }}">
-            <h3 class="paper-group-heading paper-year-heading" id="papers-completed-{{ $completionYear }}">{{ $completionYear }}</h3>
+        {{ range $researchYear := $researchYears }}
+          <section class="paper-year-group" data-research-year="{{ $researchYear }}" aria-labelledby="papers-research-year-{{ $researchYear }}">
+            <h3 class="paper-group-heading paper-year-heading" id="papers-research-year-{{ $researchYear }}">{{ $researchYear }}</h3>
             <div class="chronological-paper-list">
               {{ range $paperIndex, $paper := $orderedPapers }}
-                {{ if eq (int $paper.completion_year) $completionYear }}
+                {{ if eq (int $paper.research_year) $researchYear }}
                   {{ $paperID := $paper.id | default ($paper.title | urlize) }}
                   {{ $paperRef := $paperRefs.Get $paperID }}
-                  {{ partial "paper.html" (dict "Paper" $paper "PaperID" $paperID "PaperRef" $paperRef "HTMLID" (printf "paper-%s" $paperID) "PaperOrder" $paperRef "CompletionYear" $completionYear "SubjectID" $paper.subject) }}
+                  {{ partial "paper.html" (dict "Paper" $paper "PaperID" $paperID "PaperRef" $paperRef "HTMLID" (printf "paper-%s" $paperID) "PaperOrder" $paperRef "ResearchYear" $researchYear "SubjectID" $paper.subject) }}
                 {{ end }}
               {{ end }}
             </div>

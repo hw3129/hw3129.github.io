@@ -3,14 +3,14 @@
 {{- $paperRef := .PaperRef -}}
 {{- $htmlID := .HTMLID -}}
 {{- $paperOrder := .PaperOrder -}}
-{{- $completionYear := .CompletionYear -}}
+{{- $researchYear := .ResearchYear -}}
 {{- $subjectID := .SubjectID -}}
 <article
   class="paper"
   id="{{ $htmlID }}"
   data-paper-id="{{ $paperID }}"
   data-paper-order="{{ $paperOrder }}"
-  data-completion-year="{{ $completionYear }}"
+  data-research-year="{{ $researchYear }}"
   data-subject-id="{{ $subjectID }}"
 >
   <span class="paper-ref">[{{ $paperRef }}]</span>
