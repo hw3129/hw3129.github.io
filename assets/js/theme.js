@@ -2,6 +2,7 @@ const themeStorageKey = "academic-site-theme";
 const root = document.documentElement;
 const mathJaxReadyEvent = "academic-site-mathjax-ready";
 const mathTypesetPromises = new WeakMap();
+const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 let subjectViewHideGeneration = 0;
 
 function readSavedTheme() {
@@ -172,6 +173,13 @@ function hideSubjectViewAfterTypesetting(subjectView) {
   });
 }
 
+function animatePaperViewEntry(view) {
+  view.classList.remove("is-view-entering");
+  if (reducedMotionQuery.matches) return;
+  void view.offsetWidth;
+  view.classList.add("is-view-entering");
+}
+
 function setPaperView(view) {
   const chronologicalView = document.getElementById("papers-chronological");
   const subjectView = document.getElementById("papers-subject");
@@ -193,6 +201,7 @@ function setPaperView(view) {
     chronologicalView.hidden = false;
     hideSubjectViewAfterTypesetting(subjectView);
   }
+  animatePaperViewEntry(showSubject ? subjectView : chronologicalView);
 
   const label = button.querySelector(".paper-view-toggle-label");
   if (label) {
@@ -223,6 +232,15 @@ document.querySelectorAll(".subject-overview").forEach((panel) => {
 if (document.querySelector(".paper-view-toggle")) {
   root.dataset.paperView = "chronological";
 }
+
+document.addEventListener("animationend", (event) => {
+  if (
+    event.animationName === "paper-view-enter" &&
+    event.target instanceof Element
+  ) {
+    event.target.classList.remove("is-view-entering");
+  }
+});
 
 document.addEventListener("click", (event) => {
   if (!(event.target instanceof Element)) return;

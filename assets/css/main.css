@@ -321,6 +321,20 @@ h2 {
   display: none;
 }
 
+.paper-view.is-view-entering {
+  animation: paper-view-enter 140ms ease-out both;
+}
+
+@keyframes paper-view-enter {
+  from {
+    opacity: 0.58;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
 .paper-view.is-background-typesetting {
   height: 0;
   overflow: hidden;
@@ -487,7 +501,7 @@ h2 {
 }
 
 .paper + .paper {
-  margin-top: 1.35rem;
+  margin-top: 1.15rem;
 }
 
 .paper {
@@ -630,6 +644,10 @@ h2 {
     min-width: 1.5rem;
   }
 
+  .paper + .paper {
+    margin-top: 1rem;
+  }
+
   .paper-ref {
     right: calc(100% + 0.45rem);
     width: 1.55rem;
@@ -658,6 +676,10 @@ h2 {
   }
 
   .paper:target {
+    animation: none;
+  }
+
+  .paper-view.is-view-entering {
     animation: none;
   }
 
