@@ -1,0 +1,45 @@
+{{- $paper := .Paper -}}
+{{- $paperID := .PaperID -}}
+{{- $paperRef := .PaperRef -}}
+{{- $htmlID := .HTMLID -}}
+{{- $paperOrder := .PaperOrder -}}
+{{- $completionYear := .CompletionYear -}}
+{{- $subjectID := .SubjectID -}}
+<article
+  class="paper"
+  id="{{ $htmlID }}"
+  data-paper-id="{{ $paperID }}"
+  data-paper-order="{{ $paperOrder }}"
+  data-completion-year="{{ $completionYear }}"
+  data-subject-id="{{ $subjectID }}"
+>
+  <span class="paper-ref">[{{ $paperRef }}]</span>
+  <div class="paper-body">
+    {{- $titleURL := "" -}}
+    {{- with $paper.url -}}
+      {{- $titleURL = . -}}
+    {{- else -}}
+      {{- with $paper.links -}}
+        {{- range first 1 . -}}
+          {{- with .url }}{{ $titleURL = . }}{{ end -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+    <h4 class="paper-title">
+      {{- if $titleURL -}}
+        <a class="paper-title-link" href="{{ $titleURL }}" target="_blank" rel="noopener noreferrer">{{ $paper.title }}</a>
+      {{- else -}}
+        <span>{{ $paper.title }}</span>
+      {{- end -}}
+    </h4>
+    <p class="authors">{{ $paper.authors }}</p>
+    {{- $meta := slice -}}
+    {{- with $paper.journal }}{{ $meta = $meta | append . }}{{ end -}}
+    {{- with $paper.venue }}{{ $meta = $meta | append . }}{{ end -}}
+    {{- with $paper.year }}{{ $meta = $meta | append (printf "%v" .) }}{{ end -}}
+    {{- with $paper.volume }}{{ $meta = $meta | append (printf "vol. %v" .) }}{{ end -}}
+    {{- with $paper.number }}{{ $meta = $meta | append (printf "no. %v" .) }}{{ end -}}
+    {{- with $paper.pages }}{{ $meta = $meta | append (printf "pp. %v" .) }}{{ end -}}
+    {{- if $meta }}<p class="paper-meta">{{ delimit $meta ", " }}</p>{{ end -}}
+  </div>
+</article>

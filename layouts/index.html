@@ -1,12 +1,21 @@
 {{ define "main" }}
 {{ $profile := .Site.Data.profile }}
-{{ $papers := .Site.Data.papers.paper }}
-{{ $orderedPapers := $papers }}
+{{ $orderedPapers := .Site.Data.papers.paper }}
+{{ $directions := $profile.research_direction }}
 {{ $mathEngine := lower (printf "%v" ($profile.math_engine | default "off")) }}
 {{ $mathEnabled := eq $mathEngine "mathjax" }}
-{{ $researchMoreSetting := "on" }}
-{{ if isset $profile "research_more" }}{{ $researchMoreSetting = lower (printf "%v" $profile.research_more) }}{{ end }}
-{{ $researchMoreEnabled := and (ne $researchMoreSetting "off") (ne $researchMoreSetting "false") }}
+{{ $subjectIDs := newScratch }}
+{{ range $direction := $directions }}
+  {{ $subjectID := $direction.title | urlize }}
+  {{ with $direction.id }}{{ $subjectID = printf "%v" . }}{{ end }}
+  {{ if eq (len (findRE `^[a-z0-9]+(-[a-z0-9]+)*$` $subjectID)) 0 }}
+    {{ errorf "Research direction id %q must use lowercase ASCII letters, numbers, and single hyphens" $subjectID }}
+  {{ end }}
+  {{ if $subjectIDs.Get $subjectID }}
+    {{ errorf "Duplicate research direction id %q in data/profile.toml" $subjectID }}
+  {{ end }}
+  {{ $subjectIDs.Set $subjectID true }}
+{{ end }}
 {{ $paperIDs := newScratch }}
 {{ $paperRefs := newScratch }}
 {{ $paperOrder := newScratch }}
@@ -21,6 +30,13 @@
   {{ end }}
   {{ $paperIDs.Set $paperID true }}
   {{ $paperRefs.Set $paperID (add $paperIndex 1) }}
+  {{ $paperSubject := "" }}
+  {{ with $paper.subject }}{{ $paperSubject = printf "%v" . }}{{ end }}
+  {{ if eq $paperSubject "" }}
+    {{ errorf "Paper %q must define a subject matching a research_direction id" $paperID }}
+  {{ else if not ($subjectIDs.Get $paperSubject) }}
+    {{ errorf "Paper %q uses unknown subject %q" $paperID $paperSubject }}
+  {{ end }}
   {{ if not (isset $paper "completion_year") }}
     {{ errorf "Paper %q must define completion_year in data/papers.toml" $paperID }}
   {{ else }}
@@ -75,88 +91,12 @@
   <div class="profile-copy">
     <h1>{{ $profile.name }}</h1>
     <p class="contact">{{ $profile.email }}</p>
-
     <div class="bio">
-      {{ range $bioIndex, $bioParagraph := $profile.bio }}
-        <p>
-          {{ $bioParagraph | markdownify }}{{ if and (eq $bioIndex 1) $researchMoreEnabled $profile.research_direction }}&nbsp;<button
-            class="research-toggle"
-            type="button"
-            aria-expanded="false"
-            aria-controls="research-directions"
-            aria-label="Show research directions"
-            data-more-label="more"
-            data-less-label="less"
-          >
-            <span class="research-toggle-label">
-              <span class="research-toggle-word">more</span>
-              <span class="research-toggle-icon" aria-hidden="true"></span>
-            </span>
-            <span class="research-toggle-sizer" aria-hidden="true">
-              <span>more</span>
-              <span class="research-toggle-icon"></span>
-            </span>
-          </button>{{ end }}
-        </p>
+      {{ range $bioParagraph := $profile.bio }}
+        <p>{{ $bioParagraph | markdownify }}</p>
       {{ end }}
     </div>
   </div>
-
-  {{ if $researchMoreEnabled }}
-    {{ with $profile.research_direction }}
-      <section
-        id="research-directions"
-        class="research-details"
-        aria-labelledby="research-directions-title"
-        hidden
-      >
-        <h2 id="research-directions-title" class="visually-hidden">Research directions</h2>
-        {{ range . }}
-          <article class="research-direction">
-            <div class="research-direction-content">
-              <h3>{{ .title }}</h3>
-              {{ $researchText := printf "%v" (.text | default "") }}
-              {{ with .text_file }}
-                {{ $researchText = readFile (printf "%v" .) }}
-              {{ end }}
-              {{ range $paper := $orderedPapers }}
-                {{ $paperID := $paper.id | default ($paper.title | urlize) }}
-                {{ $paperRef := $paperRefs.Get $paperID }}
-                {{ $citationToken := printf "{cite:%s}" $paperID }}
-                {{ $citationMarkdown := printf "[[%v]](#paper-%s)" $paperRef $paperID }}
-                {{ $researchText = replace $researchText $citationToken $citationMarkdown }}
-              {{ end }}
-              {{ if in $researchText "{cite:" }}
-                {{ errorf "Unresolved paper citation in research direction %q: %s" .title $researchText }}
-              {{ end }}
-              {{ $protectedResearchText := $researchText }}
-              {{ $mathTokens := slice }}
-              {{ $mathValues := newScratch }}
-              {{ if $mathEnabled }}
-                {{ range $mathIndex, $mathExpression := findRE `(?s)\\\[.*?\\\]` $protectedResearchText }}
-                  {{ $mathToken := printf "HUGOMATHBLOCKPLACEHOLDER%dEND" $mathIndex }}
-                  {{ $mathTokens = $mathTokens | append $mathToken }}
-                  {{ $mathValues.Set $mathToken ($mathExpression | htmlEscape) }}
-                  {{ $protectedResearchText = replace $protectedResearchText $mathExpression $mathToken }}
-                {{ end }}
-                {{ range $mathIndex, $mathExpression := findRE `\\\(.*?\\\)` $protectedResearchText }}
-                  {{ $mathToken := printf "HUGOMATHINLINEPLACEHOLDER%dEND" $mathIndex }}
-                  {{ $mathTokens = $mathTokens | append $mathToken }}
-                  {{ $mathValues.Set $mathToken ($mathExpression | htmlEscape) }}
-                  {{ $protectedResearchText = replace $protectedResearchText $mathExpression $mathToken }}
-                {{ end }}
-              {{ end }}
-              {{ $renderedResearchText := $protectedResearchText | markdownify }}
-              {{ range $mathToken := $mathTokens }}
-                {{ $renderedResearchText = replace $renderedResearchText $mathToken ($mathValues.Get $mathToken) }}
-              {{ end }}
-              <div class="research-direction-copy{{ if $mathTokens }} mathjax_process{{ end }}"{{ if $mathTokens }} data-has-math="true"{{ end }}>{{ $renderedResearchText | safeHTML }}</div>
-            </div>
-          </article>
-        {{ end }}
-      </section>
-    {{ end }}
-  {{ end }}
 
   <figure class="profile-photo">
     <img src="{{ $profile.photo | relURL }}" alt="{{ $profile.photo_alt }}" width="1390" height="1132">
@@ -171,68 +111,79 @@
       <h2 id="papers-title">Papers</h2>
       {{ $paperToolsSetting := "on" }}
       {{ if isset $profile "paper_tools" }}{{ $paperToolsSetting = lower (printf "%v" $profile.paper_tools) }}{{ end }}
-      {{ if and (ne $paperToolsSetting "off") (ne $paperToolsSetting "false") }}
+      {{ $paperToolsEnabled := and (ne $paperToolsSetting "off") (ne $paperToolsSetting "false") }}
+      {{ if $paperToolsEnabled }}
         {{ $scholarURL := $profile.scholar_url | default (printf "https://scholar.google.com/scholar?q=%s" ($profile.name | urlquery)) }}
         <div class="paper-tools" aria-label="Paper section tools">
           <a class="paper-tool" href="{{ $scholarURL }}" target="_blank" rel="noopener noreferrer">Google Scholar</a>
           <span class="paper-tool-separator" aria-hidden="true">|</span>
-          <button class="paper-tool paper-abstract-toggle" type="button" aria-pressed="true">
-            <span class="paper-abstract-toggle-label">Abstract</span>
+          <button
+            class="paper-tool paper-view-toggle"
+            type="button"
+            aria-controls="papers-chronological papers-subject"
+            aria-label="Currently grouped chronologically. Group papers by subject."
+            data-subject-label="Subject"
+            data-chronological-label="Chronological"
+          >
+            <span class="paper-view-toggle-label">Subject</span>
           </button>
         </div>
       {{ end }}
 
-      {{ $yearGroups := newScratch }}
-      {{ $yearGroups.Set "current" 0 }}
-      <div class="paper-list">
-        {{ range $paper := $orderedPapers }}
-          {{ $paperID := $paper.id | default ($paper.title | urlize) }}
-          {{ $paperRef := $paperRefs.Get $paperID }}
-          {{ $completionYear := int $paper.completion_year }}
-          {{ if ne $completionYear ($yearGroups.Get "current") }}
-            <h3 class="paper-year-heading" id="papers-completed-{{ $completionYear }}">{{ $completionYear }}</h3>
-            {{ $yearGroups.Set "current" $completionYear }}
-          {{ end }}
-          <article class="paper" id="paper-{{ $paperID }}">
-            <span class="paper-ref">[{{ $paperRef }}]</span>
-            <div class="paper-body">
-              {{ $titleURL := "" }}
-              {{ with $paper.url }}
-                {{ $titleURL = . }}
-              {{ else }}
-                {{ with $paper.links }}
-                  {{ range first 1 . }}
-                    {{ with .url }}{{ $titleURL = . }}{{ end }}
-                  {{ end }}
+      {{ $completionYears := slice }}
+      {{ range $paper := $orderedPapers }}
+        {{ $completionYear := int $paper.completion_year }}
+        {{ if not (in $completionYears $completionYear) }}
+          {{ $completionYears = $completionYears | append $completionYear }}
+        {{ end }}
+      {{ end }}
+      <div id="papers-chronological" class="paper-view paper-list" data-paper-view="chronological">
+        {{ range $completionYear := $completionYears }}
+          <section class="paper-year-group" data-completion-year="{{ $completionYear }}" aria-labelledby="papers-completed-{{ $completionYear }}">
+            <h3 class="paper-group-heading paper-year-heading" id="papers-completed-{{ $completionYear }}">{{ $completionYear }}</h3>
+            <div class="chronological-paper-list">
+              {{ range $paperIndex, $paper := $orderedPapers }}
+                {{ if eq (int $paper.completion_year) $completionYear }}
+                  {{ $paperID := $paper.id | default ($paper.title | urlize) }}
+                  {{ $paperRef := $paperRefs.Get $paperID }}
+                  {{ partial "paper.html" (dict "Paper" $paper "PaperID" $paperID "PaperRef" $paperRef "HTMLID" (printf "paper-%s" $paperID) "PaperOrder" $paperRef "CompletionYear" $completionYear "SubjectID" $paper.subject) }}
                 {{ end }}
-              {{ end }}
-              <h4 class="paper-title">
-                {{ if $titleURL }}
-                  <a class="paper-title-link" href="{{ $titleURL }}" target="_blank" rel="noopener noreferrer">{{ $paper.title }}</a>
-                {{ else }}
-                  <span>{{ $paper.title }}</span>
-                {{ end }}
-              </h4>
-              <p class="authors">{{ $paper.authors }}</p>
-              {{ $meta := slice }}
-              {{ with $paper.journal }}{{ $meta = $meta | append . }}{{ end }}
-              {{ with $paper.venue }}{{ $meta = $meta | append . }}{{ end }}
-              {{ with $paper.year }}{{ $meta = $meta | append (printf "%v" .) }}{{ end }}
-              {{ with $paper.volume }}{{ $meta = $meta | append (printf "vol. %v" .) }}{{ end }}
-              {{ with $paper.number }}{{ $meta = $meta | append (printf "no. %v" .) }}{{ end }}
-              {{ with $paper.pages }}{{ $meta = $meta | append (printf "pp. %v" .) }}{{ end }}
-              {{ if $meta }}<p class="paper-meta">{{ delimit $meta ", " }}</p>{{ end }}
-              {{ with $paper.abstract }}
-                <div class="abstract-disclosure" aria-hidden="false">
-                  <div class="abstract-disclosure-inner">
-                    <p class="abstract">"{{ . }}"</p>
-                  </div>
-                </div>
               {{ end }}
             </div>
-          </article>
+          </section>
         {{ end }}
       </div>
+
+      {{ if $paperToolsEnabled }}
+        <div id="papers-subject" class="paper-view paper-list paper-list-subject" data-paper-view="subject" hidden>
+          {{ range $direction := $directions }}
+            {{ $subjectID := $direction.title | urlize }}
+            {{ with $direction.id }}{{ $subjectID = printf "%v" . }}{{ end }}
+            {{ $subjectPapers := where $orderedPapers "subject" $subjectID }}
+            {{ if gt (len $subjectPapers) 0 }}
+              {{ $overviewID := printf "subject-overview-%s" $subjectID }}
+              <section class="paper-subject" data-subject-id="{{ $subjectID }}" aria-labelledby="subject-heading-{{ $subjectID }}">
+                <h3 class="paper-group-heading paper-subject-heading">
+                  <button
+                    id="subject-heading-{{ $subjectID }}"
+                    class="subject-overview-toggle"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="{{ $overviewID }}"
+                  >
+                    <span class="subject-overview-title">{{ $direction.title }}</span>
+                    <span class="subject-overview-icon" aria-hidden="true"></span>
+                  </button>
+                </h3>
+                <div id="{{ $overviewID }}" class="subject-overview" hidden>
+                  {{ partial "research-direction.html" (dict "Direction" $direction "Papers" $orderedPapers "PaperRefs" $paperRefs "AnchorPrefix" "paper" "MathEnabled" $mathEnabled) }}
+                </div>
+                <div class="subject-paper-list" data-subject-id="{{ $subjectID }}"></div>
+              </section>
+            {{ end }}
+          {{ end }}
+        </div>
+      {{ end }}
     </section>
   {{ else }}
     {{ with index $markdownSectionHTML $sectionID }}

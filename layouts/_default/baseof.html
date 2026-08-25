@@ -12,16 +12,19 @@
 {{- if not (in (slice "off" "mathjax") $mathEngine) -}}
   {{- errorf "math_engine in data/profile.toml must be \"mathjax\" or \"off\" (got %q)" $mathEngine -}}
 {{- end -}}
-{{- $researchMoreSetting := lower (printf "%v" ($profile.research_more | default "on")) -}}
-{{- $researchMoreEnabled := and (ne $researchMoreSetting "off") (ne $researchMoreSetting "false") -}}
+{{- $paperToolsSetting := "on" -}}
+{{- if isset $profile "paper_tools" -}}
+  {{- $paperToolsSetting = lower (printf "%v" $profile.paper_tools) -}}
+{{- end -}}
+{{- $paperToolsEnabled := and (ne $paperToolsSetting "off") (ne $paperToolsSetting "false") -}}
 {{- $hasResearchMath := false -}}
-{{- if and .IsHome $researchMoreEnabled (eq $mathEngine "mathjax") -}}
+{{- if and .IsHome $paperToolsEnabled (eq $mathEngine "mathjax") -}}
   {{- range $profile.research_direction -}}
     {{- $directionText := printf "%v" (.text | default "") -}}
     {{- with .text_file -}}
       {{- $directionText = readFile (printf "%v" .) -}}
     {{- end -}}
-    {{- if or (findRE `\\\(.*?\\\)` $directionText 1) (findRE `(?s)\\\[.*?\\\]` $directionText 1) -}}
+    {{- if or (findRE `(?s)\\\(.*?\\\)` $directionText 1) (findRE `(?s)\\\[.*?\\\]` $directionText 1) -}}
       {{- $hasResearchMath = true -}}
     {{- end -}}
   {{- end -}}
@@ -54,7 +57,7 @@
             processEscapes: true
           },
           output: {
-            displayOverflow: "linebreak"
+            displayOverflow: "scroll"
           },
           startup: {
             typeset: false,

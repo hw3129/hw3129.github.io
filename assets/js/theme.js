@@ -1,14 +1,12 @@
-const storageKey = "academic-site-theme";
-const abstractsStorageKey = "academic-site-abstracts";
+const themeStorageKey = "academic-site-theme";
 const root = document.documentElement;
-const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-const researchAnimationDuration = 200;
-const researchAnimationTimers = new WeakMap();
 const mathJaxReadyEvent = "academic-site-mathjax-ready";
+const mathTypesetPromises = new WeakMap();
+let subjectViewHideGeneration = 0;
 
 function readSavedTheme() {
   try {
-    return window.localStorage?.getItem(storageKey);
+    return window.localStorage?.getItem(themeStorageKey);
   } catch {
     return null;
   }
@@ -16,23 +14,7 @@ function readSavedTheme() {
 
 function saveTheme(theme) {
   try {
-    window.localStorage?.setItem(storageKey, theme);
-  } catch {
-    return;
-  }
-}
-
-function readSavedAbstracts() {
-  try {
-    return window.localStorage?.getItem(abstractsStorageKey);
-  } catch {
-    return null;
-  }
-}
-
-function saveAbstracts(value) {
-  try {
-    window.localStorage?.setItem(abstractsStorageKey, value);
+    window.localStorage?.setItem(themeStorageKey, theme);
   } catch {
     return;
   }
@@ -46,109 +28,197 @@ function setTheme(theme) {
   });
 }
 
-function setAbstracts(value) {
-  root.dataset.abstracts = value;
-  saveAbstracts(value);
-  const hidden = value === "hidden";
-  document.querySelectorAll(".paper-abstract-toggle").forEach((button) => {
-    button.setAttribute("aria-pressed", String(!hidden));
-    button.setAttribute(
-      "aria-label",
-      hidden ? "Show paper abstracts" : "Hide paper abstracts",
+function paperElementsInTimeOrder() {
+  return Array.from(document.querySelectorAll(".paper")).sort(
+    (first, second) =>
+      Number(first.dataset.paperOrder) - Number(second.dataset.paperOrder),
+  );
+}
+
+function movePapersToSubjectGroups() {
+  paperElementsInTimeOrder().forEach((paper) => {
+    const subjectID = paper.dataset.subjectId;
+    const target = document.querySelector(
+      `.subject-paper-list[data-subject-id="${subjectID}"]`,
     );
-  });
-  document.querySelectorAll(".abstract-disclosure").forEach((disclosure) => {
-    disclosure.setAttribute("aria-hidden", String(hidden));
+    if (target) target.append(paper);
   });
 }
 
-function stopResearchAnimation(details) {
-  const timer = researchAnimationTimers.get(details);
-  if (timer) window.clearTimeout(timer);
-  researchAnimationTimers.delete(details);
-  details.classList.remove("is-opening", "is-closing");
-  details.style.removeProperty("--research-expanded-height");
+function movePapersToChronologicalGroups() {
+  paperElementsInTimeOrder().forEach((paper) => {
+    const completionYear = paper.dataset.completionYear;
+    const target = document.querySelector(
+      `.paper-year-group[data-completion-year="${completionYear}"] .chronological-paper-list`,
+    );
+    if (target) target.append(paper);
+  });
 }
 
-function typesetResearchMath(details) {
-  if (!details.querySelector('[data-has-math="true"]')) return;
-  if (["waiting", "pending", "true"].includes(details.dataset.mathTypeset)) return;
+function subjectOverviewPanel(button) {
+  return document.getElementById(button.getAttribute("aria-controls"));
+}
+
+function isPanelVisible(panel) {
+  return !panel.hidden && !panel.closest(".paper-view[hidden]");
+}
+
+function finishDeferredPanelClose(panel) {
+  if (panel.dataset.hideAfterMath !== "true") return;
+  panel.hidden = true;
+  panel.classList.remove("is-typesetting-closed");
+  delete panel.dataset.hideAfterMath;
+}
+
+function typesetResearchMath(panel) {
+  if (!panel.querySelector('[data-has-math="true"]')) {
+    return Promise.resolve();
+  }
+  if (panel.dataset.mathTypeset === "true") return Promise.resolve();
+  if (panel.dataset.mathTypeset === "pending") {
+    return mathTypesetPromises.get(panel) || Promise.resolve();
+  }
 
   const typeset = () => {
-    if (["pending", "true"].includes(details.dataset.mathTypeset)) return;
-    if (typeof window.MathJax?.typesetPromise !== "function") return;
+    if (panel.dataset.mathTypeset === "true") return Promise.resolve();
+    if (panel.dataset.mathTypeset === "pending") {
+      return mathTypesetPromises.get(panel) || Promise.resolve();
+    }
+    if (typeof window.MathJax?.typesetPromise !== "function") {
+      return Promise.resolve();
+    }
 
-    details.dataset.mathTypeset = "pending";
-    window.MathJax
-      .typesetPromise([details])
+    panel.dataset.mathTypeset = "pending";
+    const promise = window.MathJax
+      .typesetPromise([panel])
       .then(() => {
-        details.dataset.mathTypeset = "true";
+        panel.dataset.mathTypeset = "true";
       })
       .catch((error) => {
-        details.dataset.mathTypeset = "error";
+        panel.dataset.mathTypeset = "error";
         console.error("Unable to typeset research mathematics.", error);
+      })
+      .finally(() => {
+        mathTypesetPromises.delete(panel);
+        finishDeferredPanelClose(panel);
       });
+    mathTypesetPromises.set(panel, promise);
+    return promise;
   };
 
-  if (typeof window.MathJax?.typesetPromise === "function") {
-    typeset();
-    return;
-  }
+  if (typeof window.MathJax?.typesetPromise === "function") return typeset();
 
-  details.dataset.mathTypeset = "waiting";
-  document.addEventListener(
-    mathJaxReadyEvent,
-    () => {
-      details.dataset.mathTypeset = "";
-      if (!details.hidden) typeset();
-    },
-    { once: true },
-  );
+  if (panel.dataset.mathTypeset !== "waiting") {
+    panel.dataset.mathTypeset = "waiting";
+    document.addEventListener(
+      mathJaxReadyEvent,
+      () => {
+        panel.dataset.mathTypeset = "";
+        if (isPanelVisible(panel)) typeset();
+      },
+      { once: true },
+    );
+  }
+  return Promise.resolve();
 }
 
-function setResearchExpanded(button, details, expanded) {
-  stopResearchAnimation(details);
+function setSubjectOverviewExpanded(button, expanded) {
+  const panel = subjectOverviewPanel(button);
+  if (!panel) return;
+
   button.setAttribute("aria-expanded", String(expanded));
+  if (expanded) {
+    delete panel.dataset.hideAfterMath;
+    panel.classList.remove("is-typesetting-closed");
+    panel.hidden = false;
+    typesetResearchMath(panel);
+    return;
+  }
+
+  if (panel.dataset.mathTypeset === "pending") {
+    panel.dataset.hideAfterMath = "true";
+    panel.classList.add("is-typesetting-closed");
+    return;
+  }
+  panel.hidden = true;
+}
+
+function closeSubjectOverviews(exceptButton = null) {
+  document
+    .querySelectorAll('.subject-overview-toggle[aria-expanded="true"]')
+    .forEach((button) => {
+      if (button !== exceptButton) setSubjectOverviewExpanded(button, false);
+    });
+}
+
+function hideSubjectViewAfterTypesetting(subjectView) {
+  const hideGeneration = ++subjectViewHideGeneration;
+  const pendingTypesets = Array.from(
+    subjectView.querySelectorAll(".subject-overview"),
+  )
+    .map((panel) => mathTypesetPromises.get(panel))
+    .filter(Boolean);
+
+  if (pendingTypesets.length === 0) {
+    subjectView.hidden = true;
+    subjectView.classList.remove("is-background-typesetting");
+    subjectView.removeAttribute("aria-hidden");
+    return;
+  }
+
+  subjectView.classList.add("is-background-typesetting");
+  subjectView.setAttribute("aria-hidden", "true");
+  Promise.allSettled(pendingTypesets).then(() => {
+    if (hideGeneration !== subjectViewHideGeneration) return;
+    const stillPending = Array.from(
+      subjectView.querySelectorAll(".subject-overview"),
+    ).some((panel) => mathTypesetPromises.has(panel));
+    if (stillPending) {
+      hideSubjectViewAfterTypesetting(subjectView);
+      return;
+    }
+    if (root.dataset.paperView === "chronological") {
+      subjectView.hidden = true;
+    }
+    subjectView.classList.remove("is-background-typesetting");
+    subjectView.removeAttribute("aria-hidden");
+  });
+}
+
+function setPaperView(view) {
+  const chronologicalView = document.getElementById("papers-chronological");
+  const subjectView = document.getElementById("papers-subject");
+  const button = document.querySelector(".paper-view-toggle");
+  if (!chronologicalView || !subjectView || !button) return;
+
+  const showSubject = view === "subject";
+  root.dataset.paperView = showSubject ? "subject" : "chronological";
+  if (showSubject) {
+    subjectViewHideGeneration += 1;
+    subjectView.hidden = false;
+    subjectView.classList.remove("is-background-typesetting");
+    subjectView.removeAttribute("aria-hidden");
+    movePapersToSubjectGroups();
+    chronologicalView.hidden = true;
+  } else {
+    closeSubjectOverviews();
+    movePapersToChronologicalGroups();
+    chronologicalView.hidden = false;
+    hideSubjectViewAfterTypesetting(subjectView);
+  }
+
+  const label = button.querySelector(".paper-view-toggle-label");
+  if (label) {
+    label.textContent = showSubject
+      ? button.dataset.chronologicalLabel
+      : button.dataset.subjectLabel;
+  }
   button.setAttribute(
     "aria-label",
-    expanded ? "Hide research directions" : "Show research directions",
+    showSubject
+      ? "Currently grouped by subject. Show papers chronologically."
+      : "Currently grouped chronologically. Group papers by subject.",
   );
-  const label = button.querySelector(".research-toggle-word");
-  if (label) {
-    label.textContent = expanded
-      ? button.dataset.lessLabel
-      : button.dataset.moreLabel;
-  }
-
-  if (expanded) {
-    details.hidden = false;
-    typesetResearchMath(details);
-  } else if (details.hidden) {
-    return;
-  }
-
-  if (reducedMotionQuery.matches) {
-    details.hidden = !expanded;
-    return;
-  }
-
-  details.style.setProperty(
-    "--research-expanded-height",
-    `${details.getBoundingClientRect().height}px`,
-  );
-  void details.offsetHeight;
-  const motionClass = expanded ? "is-opening" : "is-closing";
-  details.classList.add(motionClass);
-
-  const timer = window.setTimeout(() => {
-    if (button.getAttribute("aria-expanded") === String(expanded) && !expanded) {
-      details.hidden = true;
-    }
-    details.classList.remove(motionClass);
-    details.style.removeProperty("--research-expanded-height");
-    researchAnimationTimers.delete(details);
-  }, researchAnimationDuration);
-  researchAnimationTimers.set(details, timer);
 }
 
 const defaultTheme = root.dataset.theme === "light" ? "light" : "dark";
@@ -157,36 +227,31 @@ const initialTheme =
   savedTheme === "light" || savedTheme === "dark" ? savedTheme : defaultTheme;
 setTheme(initialTheme);
 
-if (document.querySelector(".paper-abstract-toggle")) {
-  const savedAbstracts = readSavedAbstracts();
-  setAbstracts(savedAbstracts === "hidden" ? "hidden" : "visible");
-  window.requestAnimationFrame(() => {
-    root.dataset.abstractsReady = "true";
-  });
-} else {
-  root.dataset.abstracts = "visible";
+if (document.querySelector(".paper-view-toggle")) {
+  root.dataset.paperView = "chronological";
 }
 
 document.addEventListener("click", (event) => {
+  if (!(event.target instanceof Element)) return;
+
   const themeButton = event.target.closest(".theme-toggle");
   if (themeButton) {
     setTheme(root.dataset.theme === "dark" ? "light" : "dark");
     return;
   }
 
-  const abstractsButton = event.target.closest(".paper-abstract-toggle");
-  if (abstractsButton) {
-    setAbstracts(root.dataset.abstracts === "hidden" ? "visible" : "hidden");
+  const paperViewButton = event.target.closest(".paper-view-toggle");
+  if (paperViewButton) {
+    setPaperView(
+      root.dataset.paperView === "subject" ? "chronological" : "subject",
+    );
     return;
   }
 
-  const researchButton = event.target.closest(".research-toggle");
-  if (researchButton) {
-    const details = document.getElementById(researchButton.getAttribute("aria-controls"));
-    if (!details) return;
-
-    const expanded = researchButton.getAttribute("aria-expanded") === "true";
-    const nextExpanded = !expanded;
-    setResearchExpanded(researchButton, details, nextExpanded);
+  const subjectButton = event.target.closest(".subject-overview-toggle");
+  if (subjectButton) {
+    const expanded = subjectButton.getAttribute("aria-expanded") === "true";
+    if (!expanded) closeSubjectOverviews(subjectButton);
+    setSubjectOverviewExpanded(subjectButton, !expanded);
   }
 });

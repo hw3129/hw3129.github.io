@@ -4,14 +4,14 @@ Minimal Hugo academic website using a custom layout with configurable typography
 
 ## Edit Content
 
-Profile text and the profile image path live in `data/profile.toml`. The second
-entry in `bio` receives the inline `more` / `less` research disclosure; later
-entries continue to render normally after it.
+Profile text and the profile image path live in `data/profile.toml`.
 Images can be `.png`, `.jpg`, or `.jpeg` files placed under `static/images/`.
-The `research_direction` entries control each story's title, order, and Markdown file:
+The `research_direction` entries control each subject's stable ID, title, order,
+and expandable Markdown overview in the Subject paper view:
 
 ```toml
 [[research_direction]]
+id = "tensor-methods"
 title = "Tensor Methods and Structured Learning"
 text_file = "content/research-directions/tensor-methods.md"
 ```
@@ -19,8 +19,6 @@ text_file = "content/research-directions/tensor-methods.md"
 Edit the story bodies in `content/research-directions/*.md`. Use
 `{cite:paper-id}` in those Markdown files to cite a paper by its stable `id`.
 These files are raw Markdown fragments, so do not add front matter to them.
-Set `research_more = "on"` to show the `more` / `less` research disclosure.
-Set `research_more = "off"` to keep the second bio entry but omit the disclosure.
 Set `math_engine = "mathjax"` to render LaTeX inside the direction Markdown files,
 or set it to `"off"` to disable math rendering. Use `\(...\)` for inline math
 and `\[...\]` for display math. Dollar delimiters are intentionally unsupported,
@@ -33,9 +31,12 @@ The risk is \(R(f) = \mathbb{E}[\ell(f(X),Y)]\).
 
 Math markup is protected before Hugo processes the surrounding Markdown.
 MathJax 4.1.3 is loaded from jsDelivr only when a research formula is present,
-and typesetting starts when the research section is first expanded.
-Set `paper_tools = "on"` to show the `Google Scholar | Abstract` controls under Papers.
-Set `paper_tools = "off"` to hide those controls and always show abstracts.
+and each formula is typeset when its Subject overview is first expanded. Long
+display formulas scroll horizontally when the available width is too narrow.
+Set `paper_tools = "on"` to show `Google Scholar | Subject` under Papers. Papers
+are chronological by default; the button changes to `Chronological` in Subject
+view and switches back when clicked. Set `paper_tools = "off"` to hide the row
+and keep only the chronological view.
 Set `default_theme = "dark"` or `default_theme = "light"` to choose the theme for
 first-time visitors. A visitor's saved theme choice takes precedence afterward.
 Set `font_family` to `"verdana"`, `"system"`, `"helvetica"`, `"georgia"`,
@@ -69,6 +70,7 @@ Papers live in `data/papers.toml`. Supported fields include:
 ```toml
 [[paper]]
 id = "paper-title"
+subject = "tensor-methods"
 title = "Paper Title"
 authors = "Haoming Wang and Coauthor"
 journal = "Journal Name"
@@ -78,7 +80,6 @@ completion_year = 2025
 volume = "12"
 number = "3"
 pages = "100-120"
-abstract = "Brief abstract."
 url = "https://example.com/paper.pdf"
 ```
 
@@ -87,8 +88,13 @@ the research manuscript was completed and controls the year dividers in the
 paper list. Papers with the same `completion_year` should stay together in
 newest-to-oldest order in `data/papers.toml`.
 
+`subject` must match exactly one `research_direction.id`. Subject view moves the
+same paper entries under those direction headings while preserving their
+chronological order within each group. Each paper has one primary subject.
+
 If `url` is present, the paper title opens that link. The title keeps the same color by default and changes to the theme link color on hover.
-Paper numbers are generated automatically from their order in `papers.toml`.
+Paper numbers are generated once from their chronological order in `papers.toml`
+and remain unchanged in Subject view, so gaps inside a subject are expected.
 Add a new `[[paper]]` block at the top and it becomes `[1]`; all following
 numbers and research-story citations update automatically. The optional `id`
 stays stable when papers are reordered and defaults to a slug made from `title`.

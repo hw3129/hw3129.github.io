@@ -1,0 +1,41 @@
+{{- $direction := .Direction -}}
+{{- $orderedPapers := .Papers -}}
+{{- $paperRefs := .PaperRefs -}}
+{{- $anchorPrefix := .AnchorPrefix -}}
+{{- $mathEnabled := .MathEnabled -}}
+{{- $researchText := printf "%v" ($direction.text | default "") -}}
+{{- with $direction.text_file -}}
+  {{- $researchText = readFile (printf "%v" .) -}}
+{{- end -}}
+{{- range $paper := $orderedPapers -}}
+  {{- $paperID := $paper.id | default ($paper.title | urlize) -}}
+  {{- $paperRef := $paperRefs.Get $paperID -}}
+  {{- $citationToken := printf "{cite:%s}" $paperID -}}
+  {{- $citationMarkdown := printf "[[%v]](#%s-%s)" $paperRef $anchorPrefix $paperID -}}
+  {{- $researchText = replace $researchText $citationToken $citationMarkdown -}}
+{{- end -}}
+{{- if in $researchText "{cite:" -}}
+  {{- errorf "Unresolved paper citation in research direction %q: %s" $direction.title $researchText -}}
+{{- end -}}
+{{- $protectedResearchText := $researchText -}}
+{{- $mathTokens := slice -}}
+{{- $mathValues := newScratch -}}
+{{- if $mathEnabled -}}
+  {{- range $mathIndex, $mathExpression := findRE `(?s)\\\[.*?\\\]` $protectedResearchText -}}
+    {{- $mathToken := printf "HUGOMATHBLOCKPLACEHOLDER%dEND" $mathIndex -}}
+    {{- $mathTokens = $mathTokens | append $mathToken -}}
+    {{- $mathValues.Set $mathToken ($mathExpression | htmlEscape) -}}
+    {{- $protectedResearchText = replace $protectedResearchText $mathExpression $mathToken -}}
+  {{- end -}}
+  {{- range $mathIndex, $mathExpression := findRE `(?s)\\\(.*?\\\)` $protectedResearchText -}}
+    {{- $mathToken := printf "HUGOMATHINLINEPLACEHOLDER%dEND" $mathIndex -}}
+    {{- $mathTokens = $mathTokens | append $mathToken -}}
+    {{- $mathValues.Set $mathToken ($mathExpression | htmlEscape) -}}
+    {{- $protectedResearchText = replace $protectedResearchText $mathExpression $mathToken -}}
+  {{- end -}}
+{{- end -}}
+{{- $renderedResearchText := $protectedResearchText | markdownify -}}
+{{- range $mathToken := $mathTokens -}}
+  {{- $renderedResearchText = replace $renderedResearchText $mathToken ($mathValues.Get $mathToken) -}}
+{{- end -}}
+<div class="subject-overview-copy{{ if $mathTokens }} mathjax_process{{ end }}"{{ if $mathTokens }} data-has-math="true"{{ end }}>{{ $renderedResearchText | safeHTML }}</div>

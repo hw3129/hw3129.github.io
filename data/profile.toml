@@ -2,7 +2,6 @@ name = "Haoming Wang"
 email = "hw3129[at]columbia[dot]edu"
 scholar_url = "https://scholar.google.com/scholar?q=Haoming+Wang"
 paper_tools = "on"
-research_more = "on"
 # LaTeX rendering in research_direction: "mathjax" or "off".
 math_engine = "mathjax"
 # Theme for first-time visitors: "dark" or "light".
@@ -25,13 +24,16 @@ bio = [
 
 # Direction bodies are raw Markdown fragments referenced by text_file (no front matter).
 [[research_direction]]
+id = "tensor-methods"
 title = "Tensor Methods and Structured Learning"
 text_file = "content/research-directions/tensor-methods.md"
 
 [[research_direction]]
+id = "probability-learning-theory"
 title = "Probability and Learning Theory"
 text_file = "content/research-directions/probability-learning-theory.md"
 
 [[research_direction]]
+id = "modern-ai"
 title = "Theoretical Foundations of Modern AI"
 text_file = "content/research-directions/modern-ai.md"
