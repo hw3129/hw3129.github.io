@@ -1,0 +1,37 @@
+name = "Haoming Wang"
+email = "hw3129[at]columbia[dot]edu"
+scholar_url = "https://scholar.google.com/scholar?q=Haoming+Wang"
+paper_tools = "on"
+research_more = "on"
+# LaTeX rendering in research_direction: "mathjax" or "off".
+math_engine = "mathjax"
+# Theme for first-time visitors: "dark" or "light".
+default_theme = "dark"
+
+# Font options: "verdana", "system", "helvetica", "georgia", "charter",
+# "inter", or "source-serif-4". Inter and Source Serif 4 load from Google Fonts.
+font_family = "source-serif-4"
+
+section_order = ["experience", "papers", "teaching"]
+# Use a project-local image path under static/. png, jpg, and jpeg all work.
+photo = "images/profile.png"
+photo_alt = "Night sky silhouette photograph placeholder"
+photo_caption = "Joshua Tree, 2025"
+
+bio = [
+  "I am a second year PhD student in Statistics at Columbia University, where I am advised by Prof. [Ming Yuan](https://www.columbia.edu/~my2550/) and Prof. [Daniel Hsu](https://www.cs.columbia.edu/~djhsu/). Prior to Columbia, I earned my MS degree at UChicago, where I am advised by Prof. [Lek-Heng Lim](https://www.stat.uchicago.edu/~lekheng/index.html).",
+  "I work on the foundation of data science and machine learning.",
+]
+
+# Direction bodies are raw Markdown fragments referenced by text_file (no front matter).
+[[research_direction]]
+title = "Tensor Methods and Structured Learning"
+text_file = "content/research-directions/tensor-methods.md"
+
+[[research_direction]]
+title = "Probability and Learning Theory"
+text_file = "content/research-directions/probability-learning-theory.md"
+
+[[research_direction]]
+title = "Theoretical Foundations of Modern AI"
+text_file = "content/research-directions/modern-ai.md"

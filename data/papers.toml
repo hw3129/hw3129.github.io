@@ -1,0 +1,97 @@
+
+
+[[paper]]
+id = "tensor-stability"
+title = "Local Lipschitz Stability of Nonnegative Tensor Decompositions via Positive Scattering"
+authors = "Haoming Wang and Ming Yuan"
+venue = "Preprint"
+year = 2026
+completion_year = 2026
+abstract = "Prove that the criterion via positive scattering admits a finite condition number and hence a sharp perturbation bound for nonnegative tensor decomposition."
+
+
+[[paper]]
+id = "exact-decision"
+title = "Exact Minimality, Uniqueness, and Search for Nonnegative Tensor Decompositions"
+authors = "Haoming Wang and Ming Yuan"
+venue = "Preprint"
+year = 2026
+completion_year = 2026
+abstract = "Extends Kruskal's theorem for nonnegative tensor decomposition by introducing additional information carried by positivity and support, refered as 'positive scattering'."
+
+
+[[paper]]
+id = "tensor-identifiability"
+title = "Identifiability of Nonnegative Tensor Decompositions via Positive Scattering"
+authors = "Haoming Wang and Ming Yuan"
+venue = "Preprint"
+year = 2026
+completion_year = 2026
+abstract = "Extends Kruskal's theorem for nonnegative tensor decomposition by introducing additional information carried by positivity and support, refered as 'positive scattering'."
+
+
+[[paper]]
+id = "entropy-compression"
+title = "Iterative Entropy Compression for Offset Empirical Processes"
+authors = "Haoming Wang and Daniel Hsu"
+venue = "Preprint"
+year = 2027
+completion_year = 2026
+volume = ""
+number = ""
+pages = ""
+abstract = "Three forms of singular value decomposition of unbounded linear operator, with applications in engineering, computation, and statistics."
+
+
+[[paper]]
+id = "gated-product-complexity"
+title = "Rademacher Complexity of Gated Product Function Classes"
+authors = "Haoming Wang and Daniel Hsu"
+venue = "Preprint"
+year = 2026
+completion_year = 2025
+volume = ""
+number = ""
+pages = ""
+abstract = "A short research summary can go here. Edit this sentence in data/papers.toml when the final abstract is ready."
+
+
+[[paper]]
+id = "transformer-icl"
+title = "Task Overlap and Finite-Depth Accessibility in Transformer In-Context Learning"
+authors = "Haoming Wang and Daniel Hsu"
+venue = "Preprint"
+year = 2027
+completion_year = 2025
+volume = ""
+number = ""
+pages = ""
+abstract = "How does the organization of pretraining tasks determine when a compositional target becomes usable, and how much recurrent depth is then required?"
+
+
+
+[[paper]]
+id = "udd-svd"
+title = "Singular Value Decomposition of Unbounded Operators"
+authors = "Haoming Wang and Rongbiao Wang and Lek-Heng Lim"
+venue = "Preprint"
+year = 2026
+completion_year = 2024
+volume = ""
+number = ""
+pages = ""
+abstract = "Three forms of singular value decomposition of unbounded linear operator, with applications in engineering, computation, and statistics."
+
+
+[[paper]]
+id = "f-divergence"
+title = "Glivenko-Cantelli for f-divergence"
+authors = "Haoming Wang and Lek-Heng Lim"
+venue = "IEEE Transactions on Information Theory (TIT)"
+year = 2026
+completion_year = 2024
+volume = "68"
+number = "6"
+pages = "4020–4031"
+abstract = "How to unify Kolmogorov--Smirnov distance and f-divergence, and establish a Glivenko--Cantelli theorem for such framework."
+url = "https://arxiv.org/abs/2503.17355"

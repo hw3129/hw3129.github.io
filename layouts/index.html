@@ -1,0 +1,245 @@
+{{ define "main" }}
+{{ $profile := .Site.Data.profile }}
+{{ $papers := .Site.Data.papers.paper }}
+{{ $orderedPapers := $papers }}
+{{ $mathEngine := lower (printf "%v" ($profile.math_engine | default "off")) }}
+{{ $mathEnabled := eq $mathEngine "mathjax" }}
+{{ $researchMoreSetting := "on" }}
+{{ if isset $profile "research_more" }}{{ $researchMoreSetting = lower (printf "%v" $profile.research_more) }}{{ end }}
+{{ $researchMoreEnabled := and (ne $researchMoreSetting "off") (ne $researchMoreSetting "false") }}
+{{ $paperIDs := newScratch }}
+{{ $paperRefs := newScratch }}
+{{ $paperOrder := newScratch }}
+{{ $paperOrder.Set "previousCompletionYear" 999999 }}
+{{ range $paperIndex, $paper := $orderedPapers }}
+  {{ $paperID := $paper.id | default ($paper.title | urlize) }}
+  {{ if eq (len (findRE `^[a-z0-9]+(-[a-z0-9]+)*$` $paperID)) 0 }}
+    {{ errorf "Paper id %q must use lowercase ASCII letters, numbers, and single hyphens" $paperID }}
+  {{ end }}
+  {{ if $paperIDs.Get $paperID }}
+    {{ errorf "Duplicate paper id %q in data/papers.toml" $paperID }}
+  {{ end }}
+  {{ $paperIDs.Set $paperID true }}
+  {{ $paperRefs.Set $paperID (add $paperIndex 1) }}
+  {{ if not (isset $paper "completion_year") }}
+    {{ errorf "Paper %q must define completion_year in data/papers.toml" $paperID }}
+  {{ else }}
+    {{ $completionYear := int $paper.completion_year }}
+    {{ $previousCompletionYear := $paperOrder.Get "previousCompletionYear" }}
+    {{ if gt $completionYear $previousCompletionYear }}
+      {{ errorf "Papers must be ordered by completion_year descending: %q (%d) follows %d" $paperID $completionYear $previousCompletionYear }}
+    {{ end }}
+    {{ $paperOrder.Set "previousCompletionYear" $completionYear }}
+  {{ end }}
+{{ end }}
+{{ $contentHTML := printf "%s" .Content }}
+{{ $sectionData := newScratch }}
+{{ $markedContent := replaceRE `<h2 id="?([^" >]+)"?>` `@@SECTION:$1@@<h2 id="$1">` $contentHTML }}
+{{ range split $markedContent "@@SECTION:" }}
+  {{ if in . "@@" }}
+    {{ $sectionParts := split . "@@" }}
+    {{ $sectionID := index $sectionParts 0 }}
+    {{ $sectionHTML := index $sectionParts 1 }}
+    {{ $sectionTitle := title $sectionID }}
+    {{ $headingMatches := findRE `<h2 id="[^"]+">.*?</h2>` $sectionHTML 1 }}
+    {{ with $headingMatches }}{{ $sectionTitle = replaceRE `<[^>]+>` "" (index . 0) }}{{ end }}
+    {{ $sectionData.SetInMap "html" $sectionID $sectionHTML }}
+    {{ $sectionData.SetInMap "titles" $sectionID $sectionTitle }}
+  {{ end }}
+{{ end }}
+{{ $defaultSectionOrder := slice "papers" "experience" "teaching" }}
+{{ $sectionOrder := $defaultSectionOrder }}
+{{ with $profile.section_order }}{{ $sectionOrder = . }}{{ end }}
+{{ $markdownSectionHTML := $sectionData.Get "html" }}
+{{ $markdownSectionTitles := $sectionData.Get "titles" }}
+<nav class="floating-toc" aria-label="Page sections">
+  <div class="toc-links">
+    <a href="#about">About</a>
+    {{ range $sectionOrder }}
+      {{ $sectionID := lower (printf "%v" .) }}
+      {{ if eq $sectionID "papers" }}
+        <a href="#papers-title">Papers</a>
+      {{ else }}
+        {{ with index $markdownSectionTitles $sectionID }}
+          <a href="#{{ $sectionID }}">{{ . }}</a>
+        {{ end }}
+      {{ end }}
+    {{ end }}
+  </div>
+  <button class="theme-toggle" type="button" aria-label="Toggle black and white mode" aria-pressed="false">
+    <span class="theme-toggle-mark" aria-hidden="true"></span>
+  </button>
+</nav>
+
+<header id="about" class="profile-grid" aria-label="Profile">
+  <div class="profile-copy">
+    <h1>{{ $profile.name }}</h1>
+    <p class="contact">{{ $profile.email }}</p>
+
+    <div class="bio">
+      {{ range $bioIndex, $bioParagraph := $profile.bio }}
+        <p>
+          {{ $bioParagraph | markdownify }}{{ if and (eq $bioIndex 1) $researchMoreEnabled $profile.research_direction }}&nbsp;<button
+            class="research-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="research-directions"
+            aria-label="Show research directions"
+            data-more-label="more"
+            data-less-label="less"
+          >
+            <span class="research-toggle-label">
+              <span class="research-toggle-word">more</span>
+              <span class="research-toggle-icon" aria-hidden="true"></span>
+            </span>
+            <span class="research-toggle-sizer" aria-hidden="true">
+              <span>more</span>
+              <span class="research-toggle-icon"></span>
+            </span>
+          </button>{{ end }}
+        </p>
+      {{ end }}
+    </div>
+  </div>
+
+  {{ if $researchMoreEnabled }}
+    {{ with $profile.research_direction }}
+      <section
+        id="research-directions"
+        class="research-details"
+        aria-labelledby="research-directions-title"
+        hidden
+      >
+        <h2 id="research-directions-title" class="visually-hidden">Research directions</h2>
+        {{ range . }}
+          <article class="research-direction">
+            <div class="research-direction-content">
+              <h3>{{ .title }}</h3>
+              {{ $researchText := printf "%v" (.text | default "") }}
+              {{ with .text_file }}
+                {{ $researchText = readFile (printf "%v" .) }}
+              {{ end }}
+              {{ range $paper := $orderedPapers }}
+                {{ $paperID := $paper.id | default ($paper.title | urlize) }}
+                {{ $paperRef := $paperRefs.Get $paperID }}
+                {{ $citationToken := printf "{cite:%s}" $paperID }}
+                {{ $citationMarkdown := printf "[[%v]](#paper-%s)" $paperRef $paperID }}
+                {{ $researchText = replace $researchText $citationToken $citationMarkdown }}
+              {{ end }}
+              {{ if in $researchText "{cite:" }}
+                {{ errorf "Unresolved paper citation in research direction %q: %s" .title $researchText }}
+              {{ end }}
+              {{ $protectedResearchText := $researchText }}
+              {{ $mathTokens := slice }}
+              {{ $mathValues := newScratch }}
+              {{ if $mathEnabled }}
+                {{ range $mathIndex, $mathExpression := findRE `(?s)\\\[.*?\\\]` $protectedResearchText }}
+                  {{ $mathToken := printf "HUGOMATHBLOCKPLACEHOLDER%dEND" $mathIndex }}
+                  {{ $mathTokens = $mathTokens | append $mathToken }}
+                  {{ $mathValues.Set $mathToken ($mathExpression | htmlEscape) }}
+                  {{ $protectedResearchText = replace $protectedResearchText $mathExpression $mathToken }}
+                {{ end }}
+                {{ range $mathIndex, $mathExpression := findRE `\\\(.*?\\\)` $protectedResearchText }}
+                  {{ $mathToken := printf "HUGOMATHINLINEPLACEHOLDER%dEND" $mathIndex }}
+                  {{ $mathTokens = $mathTokens | append $mathToken }}
+                  {{ $mathValues.Set $mathToken ($mathExpression | htmlEscape) }}
+                  {{ $protectedResearchText = replace $protectedResearchText $mathExpression $mathToken }}
+                {{ end }}
+              {{ end }}
+              {{ $renderedResearchText := $protectedResearchText | markdownify }}
+              {{ range $mathToken := $mathTokens }}
+                {{ $renderedResearchText = replace $renderedResearchText $mathToken ($mathValues.Get $mathToken) }}
+              {{ end }}
+              <div class="research-direction-copy{{ if $mathTokens }} mathjax_process{{ end }}"{{ if $mathTokens }} data-has-math="true"{{ end }}>{{ $renderedResearchText | safeHTML }}</div>
+            </div>
+          </article>
+        {{ end }}
+      </section>
+    {{ end }}
+  {{ end }}
+
+  <figure class="profile-photo">
+    <img src="{{ $profile.photo | relURL }}" alt="{{ $profile.photo_alt }}" width="1390" height="1132">
+    <figcaption>{{ $profile.photo_caption }}</figcaption>
+  </figure>
+</header>
+
+{{ range $sectionOrder }}
+  {{ $sectionID := lower (printf "%v" .) }}
+  {{ if eq $sectionID "papers" }}
+    <section class="site-section papers" aria-labelledby="papers-title">
+      <h2 id="papers-title">Papers</h2>
+      {{ $paperToolsSetting := "on" }}
+      {{ if isset $profile "paper_tools" }}{{ $paperToolsSetting = lower (printf "%v" $profile.paper_tools) }}{{ end }}
+      {{ if and (ne $paperToolsSetting "off") (ne $paperToolsSetting "false") }}
+        {{ $scholarURL := $profile.scholar_url | default (printf "https://scholar.google.com/scholar?q=%s" ($profile.name | urlquery)) }}
+        <div class="paper-tools" aria-label="Paper section tools">
+          <a class="paper-tool" href="{{ $scholarURL }}" target="_blank" rel="noopener noreferrer">Google Scholar</a>
+          <span class="paper-tool-separator" aria-hidden="true">|</span>
+          <button class="paper-tool paper-abstract-toggle" type="button" aria-pressed="true">
+            <span class="paper-abstract-toggle-label">Abstract</span>
+          </button>
+        </div>
+      {{ end }}
+
+      {{ $yearGroups := newScratch }}
+      {{ $yearGroups.Set "current" 0 }}
+      <div class="paper-list">
+        {{ range $paper := $orderedPapers }}
+          {{ $paperID := $paper.id | default ($paper.title | urlize) }}
+          {{ $paperRef := $paperRefs.Get $paperID }}
+          {{ $completionYear := int $paper.completion_year }}
+          {{ if ne $completionYear ($yearGroups.Get "current") }}
+            <h3 class="paper-year-heading" id="papers-completed-{{ $completionYear }}">{{ $completionYear }}</h3>
+            {{ $yearGroups.Set "current" $completionYear }}
+          {{ end }}
+          <article class="paper" id="paper-{{ $paperID }}">
+            <span class="paper-ref">[{{ $paperRef }}]</span>
+            <div class="paper-body">
+              {{ $titleURL := "" }}
+              {{ with $paper.url }}
+                {{ $titleURL = . }}
+              {{ else }}
+                {{ with $paper.links }}
+                  {{ range first 1 . }}
+                    {{ with .url }}{{ $titleURL = . }}{{ end }}
+                  {{ end }}
+                {{ end }}
+              {{ end }}
+              <h4 class="paper-title">
+                {{ if $titleURL }}
+                  <a class="paper-title-link" href="{{ $titleURL }}" target="_blank" rel="noopener noreferrer">{{ $paper.title }}</a>
+                {{ else }}
+                  <span>{{ $paper.title }}</span>
+                {{ end }}
+              </h4>
+              <p class="authors">{{ $paper.authors }}</p>
+              {{ $meta := slice }}
+              {{ with $paper.journal }}{{ $meta = $meta | append . }}{{ end }}
+              {{ with $paper.venue }}{{ $meta = $meta | append . }}{{ end }}
+              {{ with $paper.year }}{{ $meta = $meta | append (printf "%v" .) }}{{ end }}
+              {{ with $paper.volume }}{{ $meta = $meta | append (printf "vol. %v" .) }}{{ end }}
+              {{ with $paper.number }}{{ $meta = $meta | append (printf "no. %v" .) }}{{ end }}
+              {{ with $paper.pages }}{{ $meta = $meta | append (printf "pp. %v" .) }}{{ end }}
+              {{ if $meta }}<p class="paper-meta">{{ delimit $meta ", " }}</p>{{ end }}
+              {{ with $paper.abstract }}
+                <div class="abstract-disclosure" aria-hidden="false">
+                  <div class="abstract-disclosure-inner">
+                    <p class="abstract">"{{ . }}"</p>
+                  </div>
+                </div>
+              {{ end }}
+            </div>
+          </article>
+        {{ end }}
+      </div>
+    </section>
+  {{ else }}
+    {{ with index $markdownSectionHTML $sectionID }}
+      <section class="site-section markdown-section">
+        {{ . | safeHTML }}
+      </section>
+    {{ end }}
+  {{ end }}
+{{ end }}
+{{ end }}

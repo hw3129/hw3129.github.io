@@ -1,0 +1,80 @@
+{{- $profile := .Site.Data.profile -}}
+{{- $defaultTheme := lower (printf "%v" ($profile.default_theme | default "dark")) -}}
+{{- if not (in (slice "dark" "light") $defaultTheme) -}}
+  {{- errorf "default_theme in data/profile.toml must be \"dark\" or \"light\" (got %q)" $defaultTheme -}}
+{{- end -}}
+{{- $fontFamily := lower (printf "%v" ($profile.font_family | default "verdana")) -}}
+{{- $fontOptions := slice "verdana" "system" "helvetica" "georgia" "charter" "inter" "source-serif-4" -}}
+{{- if not (in $fontOptions $fontFamily) -}}
+  {{- errorf "font_family in data/profile.toml must be one of %s (got %q)" (delimit $fontOptions ", ") $fontFamily -}}
+{{- end -}}
+{{- $mathEngine := lower (printf "%v" ($profile.math_engine | default "off")) -}}
+{{- if not (in (slice "off" "mathjax") $mathEngine) -}}
+  {{- errorf "math_engine in data/profile.toml must be \"mathjax\" or \"off\" (got %q)" $mathEngine -}}
+{{- end -}}
+{{- $researchMoreSetting := lower (printf "%v" ($profile.research_more | default "on")) -}}
+{{- $researchMoreEnabled := and (ne $researchMoreSetting "off") (ne $researchMoreSetting "false") -}}
+{{- $hasResearchMath := false -}}
+{{- if and .IsHome $researchMoreEnabled (eq $mathEngine "mathjax") -}}
+  {{- range $profile.research_direction -}}
+    {{- $directionText := printf "%v" (.text | default "") -}}
+    {{- with .text_file -}}
+      {{- $directionText = readFile (printf "%v" .) -}}
+    {{- end -}}
+    {{- if or (findRE `\\\(.*?\\\)` $directionText 1) (findRE `(?s)\\\[.*?\\\]` $directionText 1) -}}
+      {{- $hasResearchMath = true -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+<!doctype html>
+<html lang="{{ .Site.Language.Lang | default "en" }}" data-theme="{{ $defaultTheme }}" data-font="{{ $fontFamily }}" data-math-engine="{{ $mathEngine }}" data-has-research-math="{{ $hasResearchMath }}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{{ .Site.Params.description }}">
+    <title>{{ if not .IsHome }}{{ .Title }} | {{ end }}{{ .Site.Title }}</title>
+    {{ if or (eq $fontFamily "inter") (eq $fontFamily "source-serif-4") }}
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      {{ if eq $fontFamily "inter" }}
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,700;1,400&amp;display=swap">
+      {{ else }}
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,500;0,700;1,400&amp;display=swap">
+      {{ end }}
+    {{ end }}
+    {{ $style := resources.Get "css/main.css" | minify | fingerprint }}
+    <link rel="stylesheet" href="{{ $style.RelPermalink }}" integrity="{{ $style.Data.Integrity }}">
+    {{ if $hasResearchMath }}
+      <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+      <script>
+        window.MathJax = {
+          tex: {
+            inlineMath: [["\\(", "\\)"]],
+            displayMath: [["\\[", "\\]"]],
+            processEscapes: true
+          },
+          output: {
+            displayOverflow: "linebreak"
+          },
+          startup: {
+            typeset: false,
+            ready() {
+              MathJax.startup.defaultReady();
+              document.dispatchEvent(new Event("academic-site-mathjax-ready"));
+            }
+          }
+        };
+      </script>
+    {{ end }}
+    {{ $theme := resources.Get "js/theme.js" | minify | fingerprint }}
+    <script src="{{ $theme.RelPermalink }}" integrity="{{ $theme.Data.Integrity }}" defer></script>
+    {{ if $hasResearchMath }}
+      <script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-chtml.js" defer></script>
+    {{ end }}
+  </head>
+  <body{{ if $hasResearchMath }} class="mathjax_ignore"{{ end }}>
+    <main class="site-shell">
+      {{ block "main" . }}{{ end }}
+    </main>
+  </body>
+</html>

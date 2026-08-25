@@ -1,0 +1,7 @@
+baseURL = "http://127.0.0.1:1313/"
+languageCode = "en-us"
+title = "Haoming Wang"
+disableKinds = ["taxonomy", "term"]
+
+[params]
+  description = "Academic website"

@@ -1,0 +1,1 @@
+One line extends Glivenko–Cantelli theory to *f*-divergences {cite:f-divergence}. Complementary projects investigate iterative entropy compression for offset empirical processes {cite:entropy-compression} and the Rademacher complexity of gated product function classes {cite:gated-product-complexity}.

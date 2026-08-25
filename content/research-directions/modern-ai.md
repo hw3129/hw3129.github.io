@@ -1,0 +1,1 @@
+My current work asks how overlap among pretraining tasks affects whether a compositional target is accessible to a transformer, and how recurrent depth enters that picture {cite:transformer-icl}. More broadly, I aim to understand how architecture and the organization of training data shape the computations that learned models can perform.
