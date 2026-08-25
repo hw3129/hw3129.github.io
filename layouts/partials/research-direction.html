@@ -3,9 +3,14 @@
 {{- $paperRefs := .PaperRefs -}}
 {{- $anchorPrefix := .AnchorPrefix -}}
 {{- $mathEnabled := .MathEnabled -}}
-{{- $researchText := printf "%v" ($direction.text | default "") -}}
-{{- with $direction.text_file -}}
-  {{- $researchText = readFile (printf "%v" .) -}}
+{{- $researchText := "" -}}
+{{- if isset . "ResearchText" -}}
+  {{- $researchText = printf "%v" .ResearchText -}}
+{{- else -}}
+  {{- $researchText = printf "%v" ($direction.text | default "") -}}
+  {{- with $direction.text_file -}}
+    {{- $researchText = readFile (printf "%v" .) -}}
+  {{- end -}}
 {{- end -}}
 {{- range $paper := $orderedPapers -}}
   {{- $paperID := $paper.id | default ($paper.title | urlize) -}}

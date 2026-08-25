@@ -22,7 +22,8 @@ bio = [
   "I work on the foundation of data science and machine learning.",
 ]
 
-# Direction bodies are raw Markdown fragments referenced by text_file (no front matter).
+# Direction bodies are optional raw Markdown fragments referenced by text_file
+# (no front matter). Omit text/text_file for a subject with no overview control.
 [[research_direction]]
 id = "tensor-methods"
 title = "Tensor Methods and Structured Learning"
@@ -37,3 +38,7 @@ text_file = "content/research-directions/probability-learning-theory.md"
 id = "modern-ai"
 title = "Theoretical Foundations of Modern AI"
 text_file = "content/research-directions/modern-ai.md"
+
+[[research_direction]]
+id = "miscellaneous"
+title = "Miscellaneous"

@@ -72,7 +72,7 @@ pages = ""
 
 [[paper]]
 id = "udd-svd"
-subject = "tensor-methods"
+subject = "miscellaneous"
 title = "Singular Value Decomposition of Unbounded Operators"
 authors = "Haoming Wang and Rongbiao Wang and Lek-Heng Lim"
 venue = "Preprint"

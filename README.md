@@ -16,6 +16,9 @@ title = "Tensor Methods and Structured Learning"
 text_file = "content/research-directions/tensor-methods.md"
 ```
 
+Omit both `text` and `text_file` when a subject has no overview. It will render
+as a static subject heading without an arrow or expandable control.
+
 Edit the story bodies in `content/research-directions/*.md`. Use
 `{cite:paper-id}` in those Markdown files to cite a paper by its stable `id`.
 These files are raw Markdown fragments, so do not add front matter to them.

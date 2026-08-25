@@ -60,14 +60,10 @@ function subjectOverviewPanel(button) {
 }
 
 function isPanelVisible(panel) {
-  return !panel.hidden && !panel.closest(".paper-view[hidden]");
-}
-
-function finishDeferredPanelClose(panel) {
-  if (panel.dataset.hideAfterMath !== "true") return;
-  panel.hidden = true;
-  panel.classList.remove("is-typesetting-closed");
-  delete panel.dataset.hideAfterMath;
+  return (
+    panel.classList.contains("is-open") &&
+    !panel.closest(".paper-view[hidden]")
+  );
 }
 
 function typesetResearchMath(panel) {
@@ -100,7 +96,6 @@ function typesetResearchMath(panel) {
       })
       .finally(() => {
         mathTypesetPromises.delete(panel);
-        finishDeferredPanelClose(panel);
       });
     mathTypesetPromises.set(panel, promise);
     return promise;
@@ -127,20 +122,12 @@ function setSubjectOverviewExpanded(button, expanded) {
   if (!panel) return;
 
   button.setAttribute("aria-expanded", String(expanded));
+  panel.setAttribute("aria-hidden", String(!expanded));
+  panel.toggleAttribute("inert", !expanded);
+  panel.classList.toggle("is-open", expanded);
   if (expanded) {
-    delete panel.dataset.hideAfterMath;
-    panel.classList.remove("is-typesetting-closed");
-    panel.hidden = false;
     typesetResearchMath(panel);
-    return;
   }
-
-  if (panel.dataset.mathTypeset === "pending") {
-    panel.dataset.hideAfterMath = "true";
-    panel.classList.add("is-typesetting-closed");
-    return;
-  }
-  panel.hidden = true;
 }
 
 function closeSubjectOverviews(exceptButton = null) {
@@ -226,6 +213,12 @@ const savedTheme = readSavedTheme();
 const initialTheme =
   savedTheme === "light" || savedTheme === "dark" ? savedTheme : defaultTheme;
 setTheme(initialTheme);
+
+document.querySelectorAll(".subject-overview").forEach((panel) => {
+  panel.setAttribute("aria-hidden", "true");
+  panel.setAttribute("inert", "");
+  panel.hidden = false;
+});
 
 if (document.querySelector(".paper-view-toggle")) {
   root.dataset.paperView = "chronological";

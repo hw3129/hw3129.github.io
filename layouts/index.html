@@ -161,23 +161,39 @@
             {{ with $direction.id }}{{ $subjectID = printf "%v" . }}{{ end }}
             {{ $subjectPapers := where $orderedPapers "subject" $subjectID }}
             {{ if gt (len $subjectPapers) 0 }}
+              {{ $researchText := printf "%v" ($direction.text | default "") }}
+              {{ with $direction.text_file }}
+                {{ $researchText = readFile (printf "%v" .) }}
+              {{ end }}
+              {{ $hasOverview := ne (replaceRE `(?s)^\s+|\s+$` "" $researchText) "" }}
               {{ $overviewID := printf "subject-overview-%s" $subjectID }}
-              <section class="paper-subject" data-subject-id="{{ $subjectID }}" aria-labelledby="subject-heading-{{ $subjectID }}">
-                <h3 class="paper-group-heading paper-subject-heading">
-                  <button
-                    id="subject-heading-{{ $subjectID }}"
-                    class="subject-overview-toggle"
-                    type="button"
-                    aria-expanded="false"
-                    aria-controls="{{ $overviewID }}"
-                  >
+              {{ $subjectTitleID := printf "subject-heading-%s" $subjectID }}
+              <section class="paper-subject" data-subject-id="{{ $subjectID }}" aria-labelledby="{{ $subjectTitleID }}">
+                <h3 id="{{ $subjectTitleID }}" class="paper-group-heading paper-subject-heading">
+                  {{ if $hasOverview }}
+                    <button
+                      class="subject-overview-toggle"
+                      type="button"
+                      aria-expanded="false"
+                      aria-controls="{{ $overviewID }}"
+                    >
+                      <span class="subject-overview-title">{{ $direction.title }}</span>
+                      <span class="subject-overview-action">
+                        <span>Overview</span>
+                        <span class="subject-overview-icon" aria-hidden="true"></span>
+                      </span>
+                    </button>
+                  {{ else }}
                     <span class="subject-overview-title">{{ $direction.title }}</span>
-                    <span class="subject-overview-icon" aria-hidden="true"></span>
-                  </button>
+                  {{ end }}
                 </h3>
-                <div id="{{ $overviewID }}" class="subject-overview" hidden>
-                  {{ partial "research-direction.html" (dict "Direction" $direction "Papers" $orderedPapers "PaperRefs" $paperRefs "AnchorPrefix" "paper" "MathEnabled" $mathEnabled) }}
-                </div>
+                {{ if $hasOverview }}
+                  <div id="{{ $overviewID }}" class="subject-overview" hidden>
+                    <div class="subject-overview-inner">
+                      {{ partial "research-direction.html" (dict "Direction" $direction "ResearchText" $researchText "Papers" $orderedPapers "PaperRefs" $paperRefs "AnchorPrefix" "paper" "MathEnabled" $mathEnabled) }}
+                    </div>
+                  </div>
+                {{ end }}
                 <div class="subject-paper-list" data-subject-id="{{ $subjectID }}"></div>
               </section>
             {{ end }}
