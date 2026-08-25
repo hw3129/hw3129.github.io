@@ -368,65 +368,57 @@ h2 {
 }
 
 .paper-subject-heading::before {
+  order: 2;
   margin-top: 0.58em;
+}
+
+.subject-overview-title {
+  order: 1;
+  min-width: 0;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  overflow-wrap: anywhere;
 }
 
 .subject-overview-toggle {
   appearance: none;
-  display: block;
-  min-width: 0;
-  padding: 0;
+  order: 3;
+  flex: 0 0 auto;
+  margin: -0.35rem 0;
+  padding: 0.35rem 0 0.35rem 0.25rem;
   border: 0;
   background: transparent;
-  color: inherit;
+  color: var(--link);
   cursor: pointer;
   font: inherit;
-  font-weight: inherit;
-  line-height: inherit;
-  text-align: left;
-}
-
-.subject-overview-action {
-  display: inline-flex;
-  gap: 0.18em;
-  align-items: center;
-  margin-left: 0.38em;
-  padding: 0.12em 0.42em 0.14em;
-  border: 1px solid var(--rule);
-  border-radius: 999px;
-  color: var(--muted);
-  font-size: 0.78em;
+  font-size: 0.8em;
   font-weight: 400;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.025em;
   line-height: 1;
-  vertical-align: 0.12em;
+  text-align: left;
   white-space: nowrap;
 }
 
-.subject-overview-icon {
-  display: inline-block;
-  width: 0.62em;
-  height: 0.76em;
-  background: currentColor;
-  -webkit-mask: url("../images/latex-downarrow.svg") center / contain no-repeat;
-  mask: url("../images/latex-downarrow.svg") center / contain no-repeat;
-  transform-origin: center;
-  transition: transform 180ms ease;
+.subject-overview-action-less {
+  display: none;
 }
 
-.subject-overview-toggle[aria-expanded="true"] .subject-overview-icon {
-  transform: rotate(180deg);
+.subject-overview-toggle[aria-expanded="true"] .subject-overview-action-more {
+  display: none;
+}
+
+.subject-overview-toggle[aria-expanded="true"] .subject-overview-action-less {
+  display: inline;
 }
 
 .subject-overview-toggle:hover,
 .subject-overview-toggle:focus {
-  color: var(--text);
-}
-
-.subject-overview-toggle:hover .subject-overview-action,
-.subject-overview-toggle:focus .subject-overview-action {
-  border-color: var(--link);
   color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
 .subject-overview-toggle:focus {
@@ -667,10 +659,6 @@ h2 {
 
   .paper:target {
     animation: none;
-  }
-
-  .subject-overview-icon {
-    transition: none;
   }
 
   .subject-overview,

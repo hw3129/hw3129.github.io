@@ -169,7 +169,8 @@
               {{ $overviewID := printf "subject-overview-%s" $subjectID }}
               {{ $subjectTitleID := printf "subject-heading-%s" $subjectID }}
               <section class="paper-subject" data-subject-id="{{ $subjectID }}" aria-labelledby="{{ $subjectTitleID }}">
-                <h3 id="{{ $subjectTitleID }}" class="paper-group-heading paper-subject-heading">
+                <div class="paper-group-heading paper-subject-heading">
+                  <h3 id="{{ $subjectTitleID }}" class="subject-overview-title">{{ $direction.title }}</h3>
                   {{ if $hasOverview }}
                     <button
                       class="subject-overview-toggle"
@@ -177,16 +178,12 @@
                       aria-expanded="false"
                       aria-controls="{{ $overviewID }}"
                     >
-                      <span class="subject-overview-title">{{ $direction.title }}</span>
-                      <span class="subject-overview-action">
-                        <span>Overview</span>
-                        <span class="subject-overview-icon" aria-hidden="true"></span>
-                      </span>
+                      <span class="subject-overview-action-more">more</span>
+                      <span class="subject-overview-action-less">less</span>
+                      <span class="visually-hidden"> research description for {{ $direction.title }}</span>
                     </button>
-                  {{ else }}
-                    <span class="subject-overview-title">{{ $direction.title }}</span>
                   {{ end }}
-                </h3>
+                </div>
                 {{ if $hasOverview }}
                   <div id="{{ $overviewID }}" class="subject-overview" hidden>
                     <div class="subject-overview-inner">
