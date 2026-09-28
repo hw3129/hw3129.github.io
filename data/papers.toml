@@ -1,15 +1,4 @@
 
-
-[[paper]]
-id = "tensor-stability"
-subject = "tensor-methods"
-title = "Local Lipschitz Stability of Nonnegative Tensor Decompositions via Positive Scattering"
-authors = "Haoming Wang and Ming Yuan"
-venue = "Preprint"
-year = 2026
-research_year = 2026
-
-
 [[paper]]
 id = "exact-decision"
 subject = "tensor-methods"
@@ -28,19 +17,7 @@ authors = "Haoming Wang and Ming Yuan"
 venue = "Preprint"
 year = 2026
 research_year = 2026
-
-
-[[paper]]
-id = "entropy-compression"
-subject = "probability-learning-theory"
-title = "Iterative Entropy Compression for Offset Empirical Processes"
-authors = "Haoming Wang and Daniel Hsu"
-venue = "Preprint"
-year = 2027
-research_year = 2026
-volume = ""
-number = ""
-pages = ""
+url = "https://arxiv.org/abs/2609.11606"
 
 
 [[paper]]
@@ -57,30 +34,17 @@ pages = ""
 
 
 [[paper]]
-id = "transformer-icl"
-subject = "modern-ai"
-title = "Task Overlap and Finite-Depth Accessibility in Transformer In-Context Learning"
-authors = "Haoming Wang and Daniel Hsu"
-venue = "Preprint"
-year = 2027
-research_year = 2025
-volume = ""
-number = ""
-pages = ""
-
-
-
-[[paper]]
 id = "udd-svd"
 subject = "miscellaneous"
 title = "Singular Value Decomposition of Unbounded Operators"
-authors = "Haoming Wang and Rongbiao Wang and Lek-Heng Lim"
+authors = "Rongbiao Wang, Haoming Wang, and Lek-Heng Lim"
 venue = "Preprint"
 year = 2026
 research_year = 2024
 volume = ""
 number = ""
 pages = ""
+url = "https://arxiv.org/abs/2609.15076"
 
 
 [[paper]]
