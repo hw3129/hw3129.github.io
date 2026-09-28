@@ -359,11 +359,6 @@ h2 {
   line-height: 1.2;
 }
 
-.paper-year-heading {
-  white-space: nowrap;
-}
-
-.paper-year-group:first-child .paper-group-heading,
 .paper-subject:first-child .paper-group-heading {
   margin-top: 0;
 }

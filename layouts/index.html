@@ -130,28 +130,15 @@
         </div>
       {{ end }}
 
-      {{ $researchYears := slice }}
-      {{ range $paper := $orderedPapers }}
-        {{ $researchYear := int $paper.research_year }}
-        {{ if not (in $researchYears $researchYear) }}
-          {{ $researchYears = $researchYears | append $researchYear }}
-        {{ end }}
-      {{ end }}
       <div id="papers-chronological" class="paper-view paper-list" data-paper-view="chronological">
-        {{ range $researchYear := $researchYears }}
-          <section class="paper-year-group" data-research-year="{{ $researchYear }}" aria-labelledby="papers-research-year-{{ $researchYear }}">
-            <h3 class="paper-group-heading paper-year-heading" id="papers-research-year-{{ $researchYear }}">{{ $researchYear }}</h3>
-            <div class="chronological-paper-list">
-              {{ range $paperIndex, $paper := $orderedPapers }}
-                {{ if eq (int $paper.research_year) $researchYear }}
-                  {{ $paperID := $paper.id | default ($paper.title | urlize) }}
-                  {{ $paperRef := $paperRefs.Get $paperID }}
-                  {{ partial "paper.html" (dict "Paper" $paper "PaperID" $paperID "PaperRef" $paperRef "HTMLID" (printf "paper-%s" $paperID) "PaperOrder" $paperRef "ResearchYear" $researchYear "SubjectID" $paper.subject) }}
-                {{ end }}
-              {{ end }}
-            </div>
-          </section>
-        {{ end }}
+        <div class="chronological-paper-list">
+          {{ range $paper := $orderedPapers }}
+            {{ $paperID := $paper.id | default ($paper.title | urlize) }}
+            {{ $paperRef := $paperRefs.Get $paperID }}
+            {{ $researchYear := int $paper.research_year }}
+            {{ partial "paper.html" (dict "Paper" $paper "PaperID" $paperID "PaperRef" $paperRef "HTMLID" (printf "paper-%s" $paperID) "PaperOrder" $paperRef "ResearchYear" $researchYear "SubjectID" $paper.subject) }}
+          {{ end }}
+        </div>
       </div>
 
       {{ if $paperToolsEnabled }}

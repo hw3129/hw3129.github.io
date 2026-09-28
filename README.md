@@ -88,8 +88,8 @@ url = "https://example.com/paper.pdf"
 
 `year` is the publication or bibliographic year. `research_year` is the year in
 which the core research work for the project was primarily carried out, and it
-controls the year dividers in the paper list. Papers with the same
-`research_year` should stay together in newest-to-oldest order in
+controls chronological ordering without being displayed as a group heading.
+Papers should stay in newest-to-oldest `research_year` order in
 `data/papers.toml`.
 
 `subject` must match exactly one `research_direction.id`. Subject view moves the

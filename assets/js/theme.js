@@ -46,13 +46,13 @@ function movePapersToSubjectGroups() {
   });
 }
 
-function movePapersToChronologicalGroups() {
+function movePapersToChronologicalList() {
+  const target = document.querySelector(
+    "#papers-chronological .chronological-paper-list",
+  );
+  if (!target) return;
   paperElementsInTimeOrder().forEach((paper) => {
-    const researchYear = paper.dataset.researchYear;
-    const target = document.querySelector(
-      `.paper-year-group[data-research-year="${researchYear}"] .chronological-paper-list`,
-    );
-    if (target) target.append(paper);
+    target.append(paper);
   });
 }
 
@@ -197,7 +197,7 @@ function setPaperView(view) {
     chronologicalView.hidden = true;
   } else {
     closeSubjectOverviews();
-    movePapersToChronologicalGroups();
+    movePapersToChronologicalList();
     chronologicalView.hidden = false;
     hideSubjectViewAfterTypesetting(subjectView);
   }
