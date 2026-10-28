@@ -2,6 +2,37 @@
 
 Minimal Hugo academic website using a custom layout with configurable typography.
 
+## 日常更新与发布
+
+网站已发布在 <https://hw3129.github.io/>。修改完成后，在本项目目录运行：
+
+```bash
+./scripts/publish.sh "更新论文与简介"
+```
+
+也可以直接运行 `./scripts/publish.sh`，默认提交说明为 `Update website`。
+在 Codex 中直接说“提交并发布网站”即可使用同一流程。
+
+脚本会检查远程版本，以 Hugo **0.92.2 extended** 构建本次暂存的源码，
+以 **hw3129** 创建提交、推送到 `main`，并等待对应的 GitHub Pages 任务成功。
+出现“发布成功”后即可访问网站；不必再去 GitHub 手动操作。
+
+- 构建失败：不会创建提交或推送。修改仍在本地，修复后重跑。
+- 推送失败：提交仍在本地，恢复网络后重跑，不会创建重复的空提交。
+- 远程出现新提交：停止并保留双方修改；先检查合并，再重跑，不会强制覆盖。
+- 代码已推送但部署失败：查看输出的 Actions 链接，修复后再次提交发布。
+- 没有新修改或待推送提交：直接提示，无需重复提交。
+
+自动提交范围包括网站内容、图片、模板、样式、脚本、测试、发布配置以及
+`README.md`、`AGENTS.md`、`.gitignore`、`config.toml`。
+范围之外的改动会提示人工检查；构建产物、备份、`.tools/`、本地编辑器设置
+和 `.env` 文件会被忽略。该命令包含范围内的全部修改，包括删除文件。
+
+当前电脑已配置提交身份和 GitHub 登录。本地 GitHub CLI 的备用位置是
+`.tools/gh`，不依赖临时目录，也不会上传仓库。换电脑后需要安装上述 Hugo
+版本、安装 GitHub CLI，并用 `gh auth login` 登录 `hw3129`。脚本只设置本仓库
+的提交身份，不修改其他项目的 Git 配置。查看用法：`./scripts/publish.sh --help`。
+
 ## Edit Content
 
 Profile text and the profile image path live in `data/profile.toml`.
@@ -168,29 +199,14 @@ The production address is `https://hw3129.github.io/`.
 version, and publishes the generated `public/` directory. Keep this version
 pinned until a Hugo upgrade has been tested against the templates.
 
-For the first publication:
+The repository is connected and **Settings → Pages → Build and deployment →
+Source** is already set to **GitHub Actions**. Use the command above for normal
+updates. Pushes to the default `main` branch deploy automatically; the workflow
+also supports `master` if it becomes the default. Other branches do not publish.
 
-1. Create an empty GitHub repository owned by `hw3129`, named
-   `hw3129.github.io`. Do not initialize it with a README, license, or gitignore.
-2. Choose repository visibility deliberately: a public source repository exposes
-   all committed source, including paper entries with `visible = false`. That
-   setting controls the rendered homepage only. Private source repositories
-   require a GitHub plan that supports Pages for private repositories.
-3. Review and commit the intended site source and the workflow, connect the
-   remote repository, and push the local default branch. This checkout uses
-   `main`; the workflow also supports `master`. Build outputs, backups, and
-   local `.claude/` settings are ignored.
-4. In the repository's **Settings → Pages → Build and deployment**, set
-   **Source** to **GitHub Actions**. Once enabled, open **Actions → Publish
-   website → Run workflow** on the default branch if the initial run failed
-   because Pages had not yet been enabled.
-5. Wait for both `build` and `deploy` to succeed, then open the production address
-   and verify the Cronitor events described below.
-
-Subsequent pushes to the repository's default `main` or `master` branch deploy
-automatically. Other branches do not publish. These local files only prepare the
-deployment; the repository must still be connected, uploaded, and enabled in
-GitHub. See the [Hugo deployment guide](https://gohugo.io/host-and-deploy/deploy-to-github-pages/).
+The source repository is public, including committed paper entries with
+`visible = false`; that setting only hides them from the rendered website.
+Deployment details: [Hugo deployment guide](https://gohugo.io/host-and-deploy/deploy-to-github-pages/).
 
 ## Visit Analytics
 

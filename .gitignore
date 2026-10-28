@@ -3,4 +3,10 @@
 /.hugo_build.lock
 /.backups/
 /.claude/
+/.codex/
+/.agents/
+/.tools/
+.env
+.env.*
+__pycache__/
 .DS_Store
