@@ -5,6 +5,22 @@ const mathTypesetPromises = new WeakMap();
 const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 let subjectViewHideGeneration = 0;
 
+function trackPaperEvent(action, element) {
+  const paperID = element.closest(".paper")?.dataset.paperId;
+  if (!paperID || typeof window.cronitor !== "function") return;
+  try {
+    window.cronitor("track", `${action}.${paperID}`);
+  } catch {
+    // Analytics failures must not interrupt links or summary controls.
+  }
+}
+
+function trackPaperLink(event) {
+  if (event.defaultPrevented || !(event.target instanceof Element)) return;
+  const link = event.target.closest(".paper-title-link");
+  if (link) trackPaperEvent("paper_click", link);
+}
+
 function readSavedTheme() {
   try {
     return window.localStorage?.getItem(themeStorageKey);
@@ -139,6 +155,41 @@ function closeSubjectOverviews(exceptButton = null) {
     });
 }
 
+function setPaperSummaryExpanded(button, expanded) {
+  const panel = document.getElementById(button.getAttribute("aria-controls"));
+  if (!panel) return;
+
+  const wasExpanded = button.getAttribute("aria-expanded") === "true";
+  button.setAttribute("aria-expanded", String(expanded));
+  panel.setAttribute("aria-hidden", String(!expanded));
+  panel.toggleAttribute("inert", !expanded);
+  panel.classList.toggle("is-open", expanded);
+  panel.closest(".paper")?.classList.toggle("is-summary-open", expanded);
+  if (expanded) {
+    if (!wasExpanded) trackPaperEvent("summary_open", button);
+    typesetResearchMath(panel);
+  }
+}
+
+function closePaperSummaries(exceptButton = null) {
+  document
+    .querySelectorAll('.paper-summary-toggle[aria-expanded="true"]')
+    .forEach((button) => {
+      if (button !== exceptButton) setPaperSummaryExpanded(button, false);
+    });
+}
+
+function preloadPaperFigure(event) {
+  if (!(event.target instanceof Element)) return;
+  const button = event.target.closest(".paper-summary-toggle");
+  button
+    ?.closest(".paper")
+    ?.querySelectorAll(".paper-figure img[loading='lazy']")
+    .forEach((image) => {
+      image.loading = "eager";
+    });
+}
+
 function hideSubjectViewAfterTypesetting(subjectView) {
   const hideGeneration = ++subjectViewHideGeneration;
   const pendingTypesets = Array.from(
@@ -223,7 +274,7 @@ const initialTheme =
   savedTheme === "light" || savedTheme === "dark" ? savedTheme : defaultTheme;
 setTheme(initialTheme);
 
-document.querySelectorAll(".subject-overview").forEach((panel) => {
+document.querySelectorAll(".subject-overview, .paper-summary").forEach((panel) => {
   panel.setAttribute("aria-hidden", "true");
   panel.setAttribute("inert", "");
   panel.hidden = false;
@@ -244,6 +295,7 @@ document.addEventListener("animationend", (event) => {
 
 document.addEventListener("click", (event) => {
   if (!(event.target instanceof Element)) return;
+  if (event.button === 0) trackPaperLink(event);
 
   const themeButton = event.target.closest(".theme-toggle");
   if (themeButton) {
@@ -259,6 +311,14 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  const paperSummaryButton = event.target.closest(".paper-summary-toggle");
+  if (paperSummaryButton) {
+    const expanded = paperSummaryButton.getAttribute("aria-expanded") === "true";
+    if (!expanded) closePaperSummaries(paperSummaryButton);
+    setPaperSummaryExpanded(paperSummaryButton, !expanded);
+    return;
+  }
+
   const subjectButton = event.target.closest(".subject-overview-toggle");
   if (subjectButton) {
     const expanded = subjectButton.getAttribute("aria-expanded") === "true";
@@ -266,3 +326,10 @@ document.addEventListener("click", (event) => {
     setSubjectOverviewExpanded(subjectButton, !expanded);
   }
 });
+
+document.addEventListener("auxclick", (event) => {
+  if (event.button === 1) trackPaperLink(event);
+});
+
+document.addEventListener("pointerover", preloadPaperFigure);
+document.addEventListener("focusin", preloadPaperFigure);

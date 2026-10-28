@@ -1,16 +1,25 @@
 
+
 [[paper]]
 id = "exact-decision"
+visible = true
 subject = "tensor-methods"
-title = "Exact Minimality, Uniqueness, and Search for Nonnegative Tensor Decompositions"
+title = "Structure and Exact Certification of Nonnegative Tensor Decompositions"
 authors = "Haoming Wang and Ming Yuan"
 venue = "Preprint"
 year = 2026
 research_year = 2026
+url = "https://arxiv.org/abs/2610.32787"
+figure = "images/papers/exact-decision.svg"
+figure_alt = "Block diagram of the known and unknown blocks of A and B and the rows used to recover them"
+summary = '''
+Beyond sufficient criteria [[2]](#paper-tensor-identifiability), we study decomposition structure and exactly determine nonnegative rank, minimality, and essential uniqueness. For rational input with \(R\) terms and \(L\) bits, this takes \(G(R)L^{O(R^2)}\) time, with an exponent independent of tensor order and dimensions.
+'''
 
 
 [[paper]]
 id = "tensor-identifiability"
+visible = true
 subject = "tensor-methods"
 title = "Identifiability of Nonnegative Tensor Decompositions via Positive Scattering"
 authors = "Haoming Wang and Ming Yuan"
@@ -18,23 +27,16 @@ venue = "Preprint"
 year = 2026
 research_year = 2026
 url = "https://arxiv.org/abs/2609.11606"
-
-
-[[paper]]
-id = "gated-product-complexity"
-subject = "probability-learning-theory"
-title = "Rademacher Complexity of Gated Product Function Classes"
-authors = "Haoming Wang and Daniel Hsu"
-venue = "Preprint"
-year = 2026
-research_year = 2025
-volume = ""
-number = ""
-pages = ""
+figure = "images/papers/tensor-identifiability.svg"
+figure_alt = "Lattice diagrams of boxes B1 and B2, joined by a rook step in (a) and split into components K1 and K2 in (b)"
+summary = '''
+Kruskal's theorem gives uniqueness of a tensor decomposition from the ranks of its factors. For nonnegative tensors, positivity carries further information. We formalize this as positive scattering and show that it yields identifiability where rank conditions alone fail.
+'''
 
 
 [[paper]]
 id = "udd-svd"
+visible = true
 subject = "miscellaneous"
 title = "Singular Value Decomposition of Unbounded Operators"
 authors = "Rongbiao Wang, Haoming Wang, and Lek-Heng Lim"
@@ -45,17 +47,28 @@ volume = ""
 number = ""
 pages = ""
 url = "https://arxiv.org/abs/2609.15076"
+figure = "images/papers/udd-svd.png"
+figure_alt = "Excerpt from the paper stating Theorems 3.1 and 3.2"
+summary = '''
+The SVD is well understood for matrices and compact operators, yet many operators that arise in practice are unbounded. We develop three forms of the SVD for unbounded operators and illustrate their applications in engineering, computation, statistics, and finance.
+'''
 
 
 [[paper]]
 id = "f-divergence"
+visible = true
 subject = "probability-learning-theory"
 title = "Glivenko-Cantelli for f-divergence"
 authors = "Haoming Wang and Lek-Heng Lim"
-venue = "IEEE Transactions on Information Theory (TIT)"
-year = 2026
+venue = "Preprint"
+year = "2025"
 research_year = 2024
-volume = "68"
-number = "6"
-pages = "4020–4031"
+volume = ""
+number = ""
+pages = ""
 url = "https://arxiv.org/abs/2503.17355"
+figure = "images/papers/f-divergence.svg"
+figure_alt = "Level curves of total variation and of total variation over rays on the probability simplex"
+summary = '''
+Glivenko–Cantelli theory asks when empirical distributions converge uniformly to the truth. We extend it from classical distances to f-divergences; in particular, it unifies the KS distance and the f-divergence framework.
+'''

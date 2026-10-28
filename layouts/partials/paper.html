@@ -5,8 +5,11 @@
 {{- $paperOrder := .PaperOrder -}}
 {{- $researchYear := .ResearchYear -}}
 {{- $subjectID := .SubjectID -}}
+{{- $summary := "" -}}
+{{- if .ShowSummary }}{{ $summary = trim (printf "%v" ($paper.summary | default "")) " \t\r\n" }}{{ end -}}
+{{- $summaryID := printf "%s-summary" $htmlID -}}
 <article
-  class="paper"
+  class="paper{{ if and $summary $paper.figure }} has-figure{{ end }}"
   id="{{ $htmlID }}"
   data-paper-id="{{ $paperID }}"
   data-paper-order="{{ $paperOrder }}"
@@ -40,6 +43,27 @@
     {{- with $paper.volume }}{{ $meta = $meta | append (printf "vol. %v" .) }}{{ end -}}
     {{- with $paper.number }}{{ $meta = $meta | append (printf "no. %v" .) }}{{ end -}}
     {{- with $paper.pages }}{{ $meta = $meta | append (printf "pp. %v" .) }}{{ end -}}
-    {{- if $meta }}<p class="paper-meta">{{ delimit $meta ", " }}</p>{{ end -}}
+    {{- if $summary }}
+      <p class="paper-meta">
+        {{- with $meta }}<span class="paper-meta-text">{{ delimit . ", " }}</span>{{ end -}}
+        <button class="paper-summary-toggle" type="button" aria-expanded="false" aria-controls="{{ $summaryID }}"><span class="paper-summary-action-more">more</span><span class="paper-summary-action-less">less</span><span class="visually-hidden"> about {{ $paper.title }}</span></button>
+      </p>
+    {{- else if $meta }}<p class="paper-meta">{{ delimit $meta ", " }}</p>{{ end -}}
   </div>
+  {{- if $summary }}
+    <div id="{{ $summaryID }}" class="paper-summary" hidden>
+      <div class="paper-summary-inner">
+        {{- $summaryMarkup := partial "markdown-math.html" (dict "Text" $summary "MathEnabled" .MathEnabled) }}
+        <div class="paper-summary-text{{ if $summaryMarkup.HasMath }} mathjax_process{{ end }}"{{ if $summaryMarkup.HasMath }} data-has-math="true"{{ end }}>{{ $summaryMarkup.HTML | safeHTML }}</div>
+      </div>
+    </div>
+    {{- with $paper.figure }}
+      <figure class="paper-figure{{ if and (isset $paper "figure_invert") (not $paper.figure_invert) }} is-photo{{ end }}">
+        <img src="{{ . | relURL }}" alt="{{ $paper.figure_alt | default "" }}" loading="lazy" decoding="async"{{ with $paper.figure_position }} style="object-position: {{ . }}"{{ end }}>
+      </figure>
+    {{- end }}
+  {{- end }}
+  {{- if .ShowResearchYear }}
+    <span class="paper-research-year" title="Research year"><span class="visually-hidden">Research year </span>{{ $researchYear }}</span>
+  {{- end }}
 </article>

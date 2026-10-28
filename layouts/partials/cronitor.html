@@ -1,0 +1,22 @@
+{{- if and hugo.IsProduction (not .Site.IsServer) -}}
+  {{- with .Site.Params.cronitor -}}
+    {{- if and .client_key .hostname -}}
+      <script>
+        (() => {
+          // Also exclude previews of production builds served on another host.
+          if (window.location.protocol !== "https:" || window.location.hostname !== {{ .hostname }}) return;
+
+          window.cronitor = window.cronitor || function () {
+            (window.cronitor.q = window.cronitor.q || []).push(arguments);
+          };
+          window.cronitor("config", { clientKey: {{ .client_key }} });
+
+          const script = document.createElement("script");
+          script.async = true;
+          script.src = "https://rum.cronitor.io/script.js";
+          document.head.appendChild(script);
+        })();
+      </script>
+    {{- end -}}
+  {{- end -}}
+{{- end -}}

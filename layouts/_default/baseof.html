@@ -4,7 +4,7 @@
   {{- errorf "default_theme in data/profile.toml must be \"dark\" or \"light\" (got %q)" $defaultTheme -}}
 {{- end -}}
 {{- $fontFamily := lower (printf "%v" ($profile.font_family | default "verdana")) -}}
-{{- $fontOptions := slice "verdana" "system" "helvetica" "georgia" "charter" "inter" "source-serif-4" -}}
+{{- $fontOptions := slice "verdana" "system" "helvetica" "georgia" "charter" "inter" "source-sans-3" "source-serif-4" "work-sans" -}}
 {{- if not (in $fontOptions $fontFamily) -}}
   {{- errorf "font_family in data/profile.toml must be one of %s (got %q)" (delimit $fontOptions ", ") $fontFamily -}}
 {{- end -}}
@@ -17,6 +17,11 @@
   {{- $paperToolsSetting = lower (printf "%v" $profile.paper_tools) -}}
 {{- end -}}
 {{- $paperToolsEnabled := and (ne $paperToolsSetting "off") (ne $paperToolsSetting "false") -}}
+{{- $paperSummariesSetting := "on" -}}
+{{- if isset $profile "paper_summaries" -}}
+  {{- $paperSummariesSetting = lower (printf "%v" $profile.paper_summaries) -}}
+{{- end -}}
+{{- $paperSummariesEnabled := and (ne $paperSummariesSetting "off") (ne $paperSummariesSetting "false") -}}
 {{- $hasResearchMath := false -}}
 {{- if and .IsHome $paperToolsEnabled (eq $mathEngine "mathjax") -}}
   {{- range $profile.research_direction -}}
@@ -29,20 +34,33 @@
     {{- end -}}
   {{- end -}}
 {{- end -}}
+{{- if and .IsHome $paperSummariesEnabled (eq $mathEngine "mathjax") -}}
+  {{- range .Site.Data.papers.paper -}}
+    {{- $summaryText := printf "%v" (.summary | default "") -}}
+    {{- if and (ne .visible false) (or (findRE `(?s)\\\(.*?\\\)` $summaryText 1) (findRE `(?s)\\\[.*?\\\]` $summaryText 1)) -}}
+      {{- $hasResearchMath = true -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
 <!doctype html>
-<html lang="{{ .Site.Language.Lang | default "en" }}" data-theme="{{ $defaultTheme }}" data-font="{{ $fontFamily }}" data-math-engine="{{ $mathEngine }}" data-has-research-math="{{ $hasResearchMath }}">
+<html lang="{{ .Site.Language.Lang | default "en" }}" data-theme="{{ $defaultTheme }}" data-font="{{ $fontFamily }}" data-math-engine="{{ $mathEngine }}" data-has-research-math="{{ $hasResearchMath }}" data-paper-summaries="{{ if $paperSummariesEnabled }}on{{ else }}off{{ end }}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="{{ .Site.Params.description }}">
     <title>{{ if not .IsHome }}{{ .Title }} | {{ end }}{{ .Site.Title }}</title>
-    {{ if or (eq $fontFamily "inter") (eq $fontFamily "source-serif-4") }}
+    {{ partial "cronitor.html" . }}
+    {{ if in (slice "inter" "source-sans-3" "source-serif-4" "work-sans") $fontFamily }}
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       {{ if eq $fontFamily "inter" }}
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,700;1,400&amp;display=swap">
-      {{ else }}
+      {{ else if eq $fontFamily "source-sans-3" }}
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&amp;display=swap">
+      {{ else if eq $fontFamily "source-serif-4" }}
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,500;0,700;1,400&amp;display=swap">
+      {{ else }}
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,300;0,400;0,500;1,300;1,400&amp;display=swap">
       {{ end }}
     {{ end }}
     {{ $style := resources.Get "css/main.css" | minify | fingerprint }}

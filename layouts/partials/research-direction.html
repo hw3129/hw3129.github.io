@@ -1,5 +1,5 @@
 {{- $direction := .Direction -}}
-{{- $orderedPapers := .Papers -}}
+{{- $allPapers := .Papers -}}
 {{- $paperRefs := .PaperRefs -}}
 {{- $anchorPrefix := .AnchorPrefix -}}
 {{- $mathEnabled := .MathEnabled -}}
@@ -12,12 +12,16 @@
     {{- $researchText = readFile (printf "%v" .) -}}
   {{- end -}}
 {{- end -}}
-{{- range $paper := $orderedPapers -}}
+{{- range $paper := $allPapers -}}
   {{- $paperID := $paper.id | default ($paper.title | urlize) -}}
   {{- $paperRef := $paperRefs.Get $paperID -}}
   {{- $citationToken := printf "{cite:%s}" $paperID -}}
-  {{- $citationMarkdown := printf "[[%v]](#%s-%s)" $paperRef $anchorPrefix $paperID -}}
-  {{- $researchText = replace $researchText $citationToken $citationMarkdown -}}
+  {{- if $paperRef -}}
+    {{- $citationMarkdown := printf "[[%v]](#%s-%s)" $paperRef $anchorPrefix $paperID -}}
+    {{- $researchText = replace $researchText $citationToken $citationMarkdown -}}
+  {{- else -}}
+    {{- $researchText = replaceRE (printf `[ \t]*\{cite:%s\}` $paperID) "" $researchText -}}
+  {{- end -}}
 {{- end -}}
 {{- if in $researchText "{cite:" -}}
   {{- errorf "Unresolved paper citation in research direction %q: %s" $direction.title $researchText -}}

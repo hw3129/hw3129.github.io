@@ -1,6 +1,7 @@
 {{ define "main" }}
 {{ $profile := .Site.Data.profile }}
-{{ $orderedPapers := .Site.Data.papers.paper }}
+{{ $allPapers := .Site.Data.papers.paper }}
+{{ $orderedPapers := slice }}
 {{ $directions := $profile.research_direction }}
 {{ $mathEngine := lower (printf "%v" ($profile.math_engine | default "off")) }}
 {{ $mathEnabled := eq $mathEngine "mathjax" }}
@@ -20,7 +21,7 @@
 {{ $paperRefs := newScratch }}
 {{ $paperOrder := newScratch }}
 {{ $paperOrder.Set "previousResearchYear" 999999 }}
-{{ range $paperIndex, $paper := $orderedPapers }}
+{{ range $paper := $allPapers }}
   {{ $paperID := $paper.id | default ($paper.title | urlize) }}
   {{ if eq (len (findRE `^[a-z0-9]+(-[a-z0-9]+)*$` $paperID)) 0 }}
     {{ errorf "Paper id %q must use lowercase ASCII letters, numbers, and single hyphens" $paperID }}
@@ -29,7 +30,21 @@
     {{ errorf "Duplicate paper id %q in data/papers.toml" $paperID }}
   {{ end }}
   {{ $paperIDs.Set $paperID true }}
-  {{ $paperRefs.Set $paperID (add $paperIndex 1) }}
+  {{ $paperVisible := true }}
+  {{ if isset $paper "visible" }}
+    {{ if ne (printf "%T" $paper.visible) "bool" }}
+      {{ errorf "Paper %q must use true or false for visible in data/papers.toml" $paperID }}
+    {{ else }}
+      {{ $paperVisible = $paper.visible }}
+    {{ end }}
+  {{ end }}
+  {{ if $paperVisible }}
+    {{ if and $.Site.Params.cronitor.client_key (gt (len $paperID) 51) }}
+      {{ errorf "Paper id %q must be at most 51 characters for Cronitor events; set a shorter stable id in data/papers.toml" $paperID }}
+    {{ end }}
+    {{ $orderedPapers = $orderedPapers | append $paper }}
+    {{ $paperRefs.Set $paperID (len $orderedPapers) }}
+  {{ end }}
   {{ $paperSubject := "" }}
   {{ with $paper.subject }}{{ $paperSubject = printf "%v" . }}{{ end }}
   {{ if eq $paperSubject "" }}
@@ -112,6 +127,9 @@
       {{ $paperToolsSetting := "on" }}
       {{ if isset $profile "paper_tools" }}{{ $paperToolsSetting = lower (printf "%v" $profile.paper_tools) }}{{ end }}
       {{ $paperToolsEnabled := and (ne $paperToolsSetting "off") (ne $paperToolsSetting "false") }}
+      {{ $paperSummariesSetting := "on" }}
+      {{ if isset $profile "paper_summaries" }}{{ $paperSummariesSetting = lower (printf "%v" $profile.paper_summaries) }}{{ end }}
+      {{ $paperSummariesEnabled := and (ne $paperSummariesSetting "off") (ne $paperSummariesSetting "false") }}
       {{ if $paperToolsEnabled }}
         {{ $scholarURL := $profile.scholar_url | default (printf "https://scholar.google.com/scholar?q=%s" ($profile.name | urlquery)) }}
         <div class="paper-tools" aria-label="Paper section tools">
@@ -132,11 +150,14 @@
 
       <div id="papers-chronological" class="paper-view paper-list" data-paper-view="chronological">
         <div class="chronological-paper-list">
+          {{ $previousResearchYear := "" }}
           {{ range $paper := $orderedPapers }}
             {{ $paperID := $paper.id | default ($paper.title | urlize) }}
             {{ $paperRef := $paperRefs.Get $paperID }}
             {{ $researchYear := int $paper.research_year }}
-            {{ partial "paper.html" (dict "Paper" $paper "PaperID" $paperID "PaperRef" $paperRef "HTMLID" (printf "paper-%s" $paperID) "PaperOrder" $paperRef "ResearchYear" $researchYear "SubjectID" $paper.subject) }}
+            {{ $showResearchYear := ne (printf "%v" $researchYear) $previousResearchYear }}
+            {{ partial "paper.html" (dict "Paper" $paper "PaperID" $paperID "PaperRef" $paperRef "HTMLID" (printf "paper-%s" $paperID) "PaperOrder" $paperRef "ResearchYear" $researchYear "ShowResearchYear" $showResearchYear "SubjectID" $paper.subject "ShowSummary" $paperSummariesEnabled "MathEnabled" $mathEnabled) }}
+            {{ $previousResearchYear = printf "%v" $researchYear }}
           {{ end }}
         </div>
       </div>
@@ -174,7 +195,7 @@
                 {{ if $hasOverview }}
                   <div id="{{ $overviewID }}" class="subject-overview" hidden>
                     <div class="subject-overview-inner">
-                      {{ partial "research-direction.html" (dict "Direction" $direction "ResearchText" $researchText "Papers" $orderedPapers "PaperRefs" $paperRefs "AnchorPrefix" "paper" "MathEnabled" $mathEnabled) }}
+                      {{ partial "research-direction.html" (dict "Direction" $direction "ResearchText" $researchText "Papers" $allPapers "PaperRefs" $paperRefs "AnchorPrefix" "paper" "MathEnabled" $mathEnabled) }}
                     </div>
                   </div>
                 {{ end }}

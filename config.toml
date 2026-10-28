@@ -1,7 +1,11 @@
-baseURL = "http://127.0.0.1:1313/"
+baseURL = "https://hw3129.github.io/"
 languageCode = "en-us"
 title = "Haoming Wang"
 disableKinds = ["taxonomy", "term"]
 
 [params]
   description = "Haoming Wang — PhD student in Statistics at Columbia University."
+
+[params.cronitor]
+  client_key = "7e999300d64140694aac6ec53e27670b"
+  hostname = "hw3129.github.io"

@@ -1,0 +1,22 @@
+{{- $text := printf "%v" .Text -}}
+{{- $mathTokens := slice -}}
+{{- $mathValues := newScratch -}}
+{{- if .MathEnabled -}}
+  {{- range $mathIndex, $mathExpression := findRE `(?s)\\\[.*?\\\]` $text -}}
+    {{- $mathToken := printf "HUGOMATHBLOCKPLACEHOLDER%dEND" $mathIndex -}}
+    {{- $mathTokens = $mathTokens | append $mathToken -}}
+    {{- $mathValues.Set $mathToken ($mathExpression | htmlEscape) -}}
+    {{- $text = replace $text $mathExpression $mathToken -}}
+  {{- end -}}
+  {{- range $mathIndex, $mathExpression := findRE `(?s)\\\(.*?\\\)` $text -}}
+    {{- $mathToken := printf "HUGOMATHINLINEPLACEHOLDER%dEND" $mathIndex -}}
+    {{- $mathTokens = $mathTokens | append $mathToken -}}
+    {{- $mathValues.Set $mathToken ($mathExpression | htmlEscape) -}}
+    {{- $text = replace $text $mathExpression $mathToken -}}
+  {{- end -}}
+{{- end -}}
+{{- $html := $text | markdownify -}}
+{{- range $mathToken := $mathTokens -}}
+  {{- $html = replace $html $mathToken ($mathValues.Get $mathToken) -}}
+{{- end -}}
+{{- return (dict "HTML" $html "HasMath" (gt (len $mathTokens) 0)) -}}

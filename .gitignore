@@ -2,4 +2,5 @@
 /resources/_gen/
 /.hugo_build.lock
 /.backups/
+/.claude/
 .DS_Store

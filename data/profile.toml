@@ -2,19 +2,22 @@ name = "Haoming Wang"
 email = "hw3129[at]columbia[dot]edu"
 scholar_url = "https://scholar.google.com/scholar?q=Haoming+Wang"
 paper_tools = "off"
+# Expandable paper summaries with figures: "on" or "off".
+paper_summaries = "on"
 # LaTeX rendering in research_direction: "mathjax" or "off".
 math_engine = "mathjax"
 # Theme for first-time visitors: "dark" or "light".
-default_theme = "light"
+default_theme = "dark"
 
 # Font options: "verdana", "system", "helvetica", "georgia", "charter",
-# "inter", or "source-serif-4". Inter and Source Serif 4 load from Google Fonts.
-font_family = "source-serif-4"
+#               "inter", "source-sans-3", "source-serif-4", or "work-sans".
+# The last four load from Google Fonts.
+font_family = "work-sans"
 
 section_order = ["experience", "papers", "teaching"]
 # Use a project-local image path under static/. png, jpg, and jpeg all work.
 photo = "images/profile.png"
-photo_alt = "Silhouette of a seated person and Joshua trees beneath the Milky Way"
+photo_alt = "Joshua trees and the Milky Way"
 photo_caption = "Joshua Tree, 2025"
 
 bio = [
