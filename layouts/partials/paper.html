@@ -46,7 +46,7 @@
     {{- if $summary }}
       <p class="paper-meta">
         {{- with $meta }}<span class="paper-meta-text">{{ delimit . ", " }}</span>{{ end -}}
-        <button class="paper-summary-toggle" type="button" aria-expanded="false" aria-controls="{{ $summaryID }}"><span class="paper-summary-action-more">more</span><span class="paper-summary-action-less">less</span><span class="visually-hidden"> about {{ $paper.title }}</span></button>
+        <button class="paper-summary-toggle" type="button" aria-expanded="false" aria-controls="{{ $summaryID }}"><svg class="paper-summary-chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6 4 L10 8 L6 12" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="visually-hidden"><span class="paper-summary-action-more">Show summary</span><span class="paper-summary-action-less">Hide summary</span></span><span class="visually-hidden"> about {{ $paper.title }}</span></button>
       </p>
     {{- else if $meta }}<p class="paper-meta">{{ delimit $meta ", " }}</p>{{ end -}}
   </div>

@@ -812,7 +812,7 @@ h2 {
 .paper-summary-toggle {
   appearance: none;
   margin: -0.35rem 0;
-  padding: 0.35rem 0 0.35rem 0.25rem;
+  padding: 0.35rem 0.25rem;
   border: 0;
   background: transparent;
   color: var(--soft);
@@ -835,6 +835,19 @@ h2 {
 .paper-summary-toggle:focus-visible {
   outline: 1px solid var(--text);
   outline-offset: 3px;
+}
+
+.paper-summary-chevron {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.16em;
+  transform-origin: 50% 50%;
+  transition: transform 180ms ease;
+}
+
+.paper-summary-toggle[aria-expanded="true"] .paper-summary-chevron {
+  transform: rotate(90deg);
 }
 
 .paper-summary-action-less {
@@ -999,6 +1012,7 @@ h2 {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .paper-summary-chevron,
   .paper-summary,
   .paper-summary.is-open,
   .paper-figure,
